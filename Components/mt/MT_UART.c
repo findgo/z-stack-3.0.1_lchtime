@@ -178,9 +178,8 @@ byte MT_UartCalcFCS( uint8 *msg_ptr, uint8 len )
 #if 0
 #define MSP_FRAME_PREAMBLE1_STATE       0
 #define MSP_FRAME_PREAMBLE2_STATE       1
-#define MSP_FRAME_DATALEN_LOW_STATE     2
-#define MSP_FRAME_DATALEN_HIGH_STATE    3
-#define MSP_FRAME_REMAINPDU_STATE       4
+#define MSP_FRAME_DATALEN_STATE         2
+#define MSP_FRAME_REMAINPDU_STATE       3
 
 static uint8 mspState = MSP_FRAME_PREAMBLE1_STATE;
 static uint16 mspLEN_Token;
@@ -204,15 +203,10 @@ static void MSP_UartProcessZToolData ( uint8 port, uint8 event )
         
         case MSP_FRAME_PREAMBLE2_STATE:
             if (ch == MSP_PREAMBLE2)
-                mspState = MSP_FRAME_DATALEN_LOW_STATE;
+                mspState = MSP_FRAME_DATALEN_STATE;
             break;;
-        case MSP_FRAME_DATALEN_LOW_STATE:
+        case MSP_FRAME_DATALEN_STATE:
             mspLEN_Token = ch;
-            mspState = MSP_FRAME_DATALEN_HIGH_STATE;
-            break;
-      
-        case MSP_FRAME_DATALEN_HIGH_STATE:
-            mspLEN_Token |= ((uint16)ch << 8);
             msptempDataLen = 0;
 
             /* Allocate memory for the data */

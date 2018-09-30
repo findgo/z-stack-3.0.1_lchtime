@@ -119,7 +119,7 @@ void mspbuf_push(mspbuf_t *buf, uint8_t len)
   * @note   
   * @retval 
   */
-void mspbuf_pull(mspbuf_t *buf,uint8_t len)
+void mspbuf_pull(mspbuf_t *buf, uint8_t len)
 {
     buf->data = buf->data + len;
     buf->data_len -= len;
@@ -130,7 +130,7 @@ void mspbuf_pull(mspbuf_t *buf,uint8_t len)
   * @note   
   * @retval 
   */
-void mspsend(mspbuf_t *pfram , uint8_t command)
+void mspsend(mspbuf_t *pfram , uint8_t CMD0, uint8_t CMD1)
 {
     uint16_t payloadlen;
     uint16_t checksum;
@@ -139,18 +139,17 @@ void mspsend(mspbuf_t *pfram , uint8_t command)
 
     // for command
     mspbuf_push(pfram, MSP_PDU_COMMAND_LEN);
-    pfram->data[MSP_PDU_COMMAND_OFFSET] = command;
+    pfram->data[MSP_PDU_COMMAND0_OFFSET] = CMD0;
+    pfram->data[MSP_PDU_COMMAND1_OFFSET] = CMD1;
     // check command + data and then add checksum
 #if configMSP_USE_CHECK == 0
     checksum = mspcheckCRC16(pfram->data, pfram->data_len);
     pfram->data[pfram->data_len++] = checksum & 0xff;        // low
     pfram->data[pfram->data_len++] = (checksum >> 8) & 0xff; // high
 #elif configMSP_USE_CHECK == 1
-    checksum = mspcheckFCS(pfram->data, pfram->data_len);
-    pfram->data[pfram->data_len++] = (uint8_t)checksum;        
+    pfram->data[pfram->data_len++] = mspcheckFCS(pfram->data, pfram->data_len);        
 #elif configMSP_USE_CHECK == 2
-    checksum = mspcheckCRC16(pfram->data, pfram->data_len);
-    pfram->data[pfram->data_len++] = (uint8_t)checksum; 
+    pfram->data[pfram->data_len++] =  mspcheckSum(pfram->data, pfram->data_len);
 #else
     #error configMSP_USE_CHECK should be used as 0,1,2
 #endif
@@ -158,10 +157,9 @@ void mspsend(mspbuf_t *pfram , uint8_t command)
     mspbuf_push(pfram, MSP_FRAME_HEAD_LEN + MSP_FRAME_DATALEN_LEN);
     pfram->data[MSP_FRAME_HEAD_PREAMBLE1_OFFSET] = MSP_PREAMBLE1;   //$
     pfram->data[MSP_FRAME_HEAD_PREAMBLE2_OFFSET] = MSP_PREAMBLE2;   //M
-    pfram->data[MSP_FRAME_DATALEN_OFFSET] = payloadlen & 0xff;      // low
-    pfram->data[MSP_FRAME_DATALEN_OFFSET + 1] = (payloadlen >> 8) & 0xff; // high
+    pfram->data[MSP_FRAME_DATALEN_OFFSET] = payloadlen;
 
-    //HalUARTWrite(MT_UART_DEFAULT_PORT,pfram->data,pfram->data_len);
+    MSPWrite(pfram->data, pfram->data_len);
     
     mspbuf_pull(pfram, MSP_FRAME_HEAD_LEN + MSP_FRAME_DATALEN_LEN + MSP_PDU_COMMAND_LEN);
 }

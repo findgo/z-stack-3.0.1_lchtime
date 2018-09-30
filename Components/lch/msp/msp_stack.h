@@ -29,14 +29,15 @@
 // frame data length offset
 #define MSP_FRAME_DATALEN_OFFSET     2
 // command offset in pdu
-#define MSP_PDU_COMMAND_OFFSET      0
+#define MSP_PDU_COMMAND0_OFFSET      0
+#define MSP_PDU_COMMAND1_OFFSET      1
 // data offset in pdu
-#define MSP_PDU_DATA_OFFSET         1
+#define MSP_PDU_DATA_OFFSET          2
 
 #define MSP_FRAME_HEAD_LEN               2  // frame head len
-#define MSP_FRAME_DATALEN_LEN            2  // frame data length len
+#define MSP_FRAME_DATALEN_LEN            1  // frame data length len
 // PDU
-#define MSP_PDU_COMMAND_LEN              1   // pdu command
+#define MSP_PDU_COMMAND_LEN              2   // pdu command
 
 #define MSP_FRAME_CRC_LEN                2  // CRC
 #define MSP_FRAME_FCS_LEN                1  // FCS
@@ -45,6 +46,13 @@
 #define MSP_PREAMBLE1       '$'  // 0x24
 #define MSP_PREAMBLE2       'M'  // 0x4d
 
+#define MSP_CMD0_TYPE_MASK       0xc0 
+#define MSP_CMD0_CLASS_MASK      0x3f
+
+#define MSP_CMD0_TYPE_CONFIRM       0x00   
+#define MSP_CMD0_TYPE_UNCONFIRM     0x40
+#define MSP_CMD0_TYPE_RESPONSE      0X80
+
 
 typedef struct {
     uint8_t *data;
@@ -52,6 +60,14 @@ typedef struct {
     uint8_t buf[];
 }mspbuf_t;
 
+#define MSPWrite(data, len)
+
+uint16_t mspcheckCRC16( uint8_t * pucFrame, uint16_t usLen );
+uint8_t mspcheckFCS( uint8_t *pucFrame, uint16_t len );
+uint8_t mspcheckSum( uint8_t *pucFrame, uint16_t len );
+
+void mspbuf_init(mspbuf_t *buf);
+void mspsend(mspbuf_t *pfram , uint8_t CMD0, uint8_t CMD1);
 
 #endif
 
