@@ -184,10 +184,10 @@ extern uint8 znpCfg1;
 #define HAL_UART_PORT              0
 #endif
 // SOC defines the ideal sizes in the individual _hal_uart_dma/isr.c modules.
-#define HAL_UART_FLOW_THRESHOLD    0
-#define HAL_UART_RX_BUF_SIZE       0
-#define HAL_UART_TX_BUF_SIZE       0
-#define HAL_UART_IDLE_TIMEOUT      0
+#define HAL_UART_FLOW_THRESHOLD    HAL_UART_RX_BUF_SIZE/2 // 20180930 0
+#define HAL_UART_RX_BUF_SIZE       254 // 20180930  0
+#define HAL_UART_TX_BUF_SIZE       254 // 20180930  0
+#define HAL_UART_IDLE_TIMEOUT      2  // 20180930   0
 
 // Restart system from absolute beginning
 // Disables interrupts, forces WatchDog reset

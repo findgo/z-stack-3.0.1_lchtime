@@ -148,11 +148,13 @@ void InitBoard( uint8 level )
     znpCfg1 = ZNP_CFG1_SPI;
     znpCfg0 = ZNP_CFG0_32K_OSC;
 #else
-    znpCfg1 = P2_0;
-    znpCfg0 = P1_2;
+    //znpCfg1 = P2_0;
+    //znpCfg0 = P1_2;
     // Tri-state the 2 CFG inputs after being read (see hal_board_cfg_xxx.h for CFG0.)
-    P1INP |= BV(2);
-    P2INP |= BV(0);
+    //P1INP |= BV(2);
+    //P2INP |= BV(0);
+    znpCfg1 = ZNP_CFG1_UART;     //20180930
+    znpCfg0 = ZNP_CFG0_32K_XTAL;
 #endif
   }
   else  // !OB_COLD
