@@ -569,10 +569,15 @@ MAC_INTERNAL_API void macRadioTurnOnPower(void)
       /* P1_1 -> PAEN */
       RFC_OBS_CTRL0 = RFC_OBS_CTRL_PA_PD_INV;
       OBSSEL1       = OBSSEL_OBS_CTRL0;
-      
+ #if defined USER_HAL_PA_LNA_RFX2401C
+      P1SEL &= ~0x10;
+      P1DIR |= 0x10;
+      P1_4 = 1;  // P1_4 RXEN
+ #else
       /* P1_4 -> EN (LNA control) */
       RFC_OBS_CTRL1 = RFC_OBS_CTRL_LNAMIX_PD_INV;
       OBSSEL4       = OBSSEL_OBS_CTRL1;
+#endif
     }
     
     /* For any RX, change CCA settings for CC2591 compression workaround.
@@ -628,6 +633,10 @@ MAC_INTERNAL_API void macRadioTurnOffPower(void)
     {   
       if (paLnaChip == PA_LNA_CC2591  ||  paLnaChip == PA_LNA_CC2590)
       {
+       #if defined USER_HAL_PA_LNA_RFX2401C
+        P1DIR |= BV(0);
+        P1_0 = 0;
+        #endif
         /* Set direction of P1_4 to output and pulled down to prevent any leakage
          * when used to drive PA LNA		
 		 */

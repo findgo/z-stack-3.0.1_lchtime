@@ -279,7 +279,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -313,6 +313,7 @@
                     <state>POWER_SAVING</state>
                     <state>FEATURE_SYSTEM_STATS</state>
                     <state>MT_GP_CB_FUNC</state>
+                    <state>HAL_PA_LNA_CC2592</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -1429,7 +1430,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -1465,6 +1466,7 @@
                     <state>MT_GP_CB_FUNC</state>
                     <state>ASSERT_RESET</state>
                     <state>MAKE_CRC_SHDW</state>
+                    <state>HAL_PA_LNA_CC2592</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -2582,7 +2584,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -2618,6 +2620,8 @@
                     <state>MT_GP_CB_FUNC</state>
                     <state>ASSERT_RESET</state>
                     <state>FAKE_CRC_SHDW</state>
+                    <state>HAL_PA_LNA</state>
+                    <state>USER_HAL_PA_LNA_RFX2401C</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -3283,16 +3287,16 @@
                 </option>
                 <option>
                     <name>XExtraOutOverride</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>ExtraOutputFile</name>
-                    <state>CC2530.sim</state>
+                    <state>CC2530.a51</state>
                 </option>
                 <option>
                     <name>ExtraOutputFormat</name>
                     <version>11</version>
-                    <state>60</state>
+                    <state>23</state>
                 </option>
                 <option>
                     <name>ExtraFormatVariant</name>

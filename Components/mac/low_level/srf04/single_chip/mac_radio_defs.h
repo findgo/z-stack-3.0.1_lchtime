@@ -447,9 +447,13 @@
 
 /* ----------- PA/LNA control ---------- */
 /* For Skyworks parts only CPS maps closely to the HGM line */
+#if defined USER_HAL_PA_LNA_RFX2401C
+#define HAL_PA_LNA_RX_HGM()
+#define HAL_PA_LNA_RX_LGM()
+#else
 #define HAL_PA_LNA_RX_HGM()                           st( P0_7 = 1; )
 #define HAL_PA_LNA_RX_LGM()                           st( P0_7 = 0; )
-
+#endif
 
 /* ----------- PA/LNA SKE2431L control ---------- */
 /* CSD Line high maps closely to EN which is controlled by hardware */ 
