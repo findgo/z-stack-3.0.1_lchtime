@@ -99,25 +99,25 @@
 //global attributes
 const uint16 zclSampleLight_clusterRevision_all = 0x0001; //currently all cluster implementations are according to ZCL6, which has revision #1. In the future it is possible that different clusters will have different revisions, so they will have to use separate attribute variables.
 
-// Basic Cluster
-const uint8 zclSampleLight_HWRevision = SAMPLELIGHT_HWVERSION;
+// Basic Cluster attribute 
 const uint8 zclSampleLight_ZCLVersion = SAMPLELIGHT_ZCLVERSION;
-const uint8 zclSampleLight_ManufacturerName[] = { 16, 'T','e','x','a','s','I','n','s','t','r','u','m','e','n','t','s' };
+const uint8 zclSampleLight_HWRevision = SAMPLELIGHT_HWVERSION;
+const uint8 zclSampleLight_ManufacturerName[] = { 16, 'F','Z','l','c','h','t','i','m','e','C','O','.',',','L','T','D' };
 const uint8 zclSampleLight_ModelId[] = { 16, 'T','I','0','0','0','1',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' };
-const uint8 zclSampleLight_DateCode[] = { 16, '2','0','0','6','0','8','3','1',' ',' ',' ',' ',' ',' ',' ',' ' };
+const uint8 zclSampleLight_DateCode[] = { 16, '2','0','1','8','1','0','2','3',' ',' ',' ',' ',' ',' ',' ',' ' };
 const uint8 zclSampleLight_PowerSource = POWER_SOURCE_MAINS_1_PHASE;
 
 uint8 zclSampleLight_LocationDescription[17];
 uint8 zclSampleLight_PhysicalEnvironment;
 uint8 zclSampleLight_DeviceEnable;
 
-// Identify Cluster
+// Identify Cluster attribute
 uint16 zclSampleLight_IdentifyTime;
 
-// Groups Cluster
+// Groups Cluster attribute
 uint8 zclSampleLight_GroupsNameSupport = 0;
 
-// On/Off Cluster
+// On/Off Cluster attribute
 uint8  zclSampleLight_OnOff;
 
 // Level Control Cluster
