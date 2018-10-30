@@ -109,6 +109,43 @@ uint8 znpCfg0;
 #if defined TC_LINKKEY_JOIN
 extern uint8 zcl_TaskID;
 #endif
+static void LchtimeInit(void);
+// This list should be filled with Application specific Cluster IDs.
+const cId_t LchtimeApp_ClusterInList[LCHTIMEAPP_MAX_CLUSTERS] =
+{
+    LCHTIMEAPP_CLUSTERID,  
+};
+const cId_t LchtimeApp_ClusterOutList[LCHTIMEAPP_MAX_CLUSTERS] = 
+{
+    LCHTIMEAPP_CLUSTERID,
+};
+
+const SimpleDescriptionFormat_t LchtimeApp_SimpleDesc =
+{
+  LCHTIMEAPP_ENDPOINT,              //  int Endpoint;
+  LCHTIMEAPP_PROFID,                //  uint16 AppProfId[2];
+  LCHTIMEAPP_DEVICEID,              //  uint16 AppDeviceId[2];
+  LCHTIMEAPP_DEVICE_VERSION,        //  int   AppDevVer:4;
+  LCHTIMEAPP_FLAGS,                 //  int   AppFlags:4;
+  LCHTIMEAPP_MAX_CLUSTERS,          //  byte  AppNumInClusters;
+  (cId_t *)LchtimeApp_ClusterInList,  //  byte *pAppInClusterList;
+  LCHTIMEAPP_MAX_CLUSTERS,          //  byte  AppNumInClusters;
+  (cId_t *)LchtimeApp_ClusterOutList   //  byte *pAppInClusterList;
+};
+static endPointDesc_t LchtimeApp_epDesc;
+static void LchtimeInit(void)
+{
+      // Fill out the endpoint description.
+    LchtimeApp_epDesc.endPoint = LCHTIMEAPP_ENDPOINT;
+    LchtimeApp_epDesc.task_id = &MT_TaskID;
+    LchtimeApp_epDesc.simpleDesc
+            = (SimpleDescriptionFormat_t *)&LchtimeApp_SimpleDesc;
+    LchtimeApp_epDesc.latencyReq = noLatencyReqs;
+
+    // Register the endpoint description with the AF
+    afRegister( &LchtimeApp_epDesc );
+}
+
 
 /**************************************************************************************************
  * @fn          znpInit
@@ -426,6 +463,7 @@ static void npInit(void)
 #if defined CC2531ZNP
   (void)osal_pwrmgr_task_state(znpTaskId, PWRMGR_HOLD);
 #endif
+    LchtimeInit();
 }
 
 /**************************************************************************************************

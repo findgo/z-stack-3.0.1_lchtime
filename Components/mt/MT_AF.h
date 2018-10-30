@@ -70,6 +70,20 @@ typedef enum {
   InterPanChk
 } InterPanCtl_t;
 #endif
+
+
+// by mo
+/* 自定义双向传输 API传输方式 */
+#define LCHTIMEAPP_MAX_CLUSTERS       1
+#define LCHTIMEAPP_CLUSTERID        0xabcd
+// device's needs
+#define LCHTIMEAPP_ENDPOINT           0xaa
+
+#define LCHTIMEAPP_PROFID             0xabcd
+#define LCHTIMEAPP_DEVICEID           0xabcd
+#define LCHTIMEAPP_DEVICE_VERSION     1
+#define LCHTIMEAPP_FLAGS              0
+
 /***************************************************************************************************
  * GLOBAL VARIABLES
  ***************************************************************************************************/

@@ -1,2 +1,2 @@
-znp.bat ..\tools CC2530-ZNP-with-SBL
-znp.bat ..\tools CC2530-ZNP-without-SBL
+./znp.bat ../tools CC2530-ZNP-with-SBL
+./znp.bat ../tools CC2530-ZNP-without-SBL

@@ -313,7 +313,8 @@
                     <state>POWER_SAVING</state>
                     <state>FEATURE_SYSTEM_STATS</state>
                     <state>MT_GP_CB_FUNC</state>
-                    <state>HAL_PA_LNA_CC2592</state>
+                    <state>HAL_PA_LNA</state>
+                    <state>USER_HAL_PA_LNA_RFX2401C</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -3512,7 +3513,7 @@
             <name>$PROJ_DIR$\..\..\..\..\Components\stack\bdb\bdb_touchlink.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\..\..\Components\stack\bdb\bdb_touchlink.h</name>
+            <name>$PROJ_DIR$\..\..\..\..\Components\stack\bdb\bdb_touchLink.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\Components\stack\bdb\bdb_touchlink_initiator.c</name>

@@ -259,7 +259,6 @@ void MT_ProcessQueue( void );
 #if defined ( MT_USER_TEST_FUNC )
 void MT_ProcessAppUserCmd( byte *pData );
 #endif
-
 /**************************************************************************************************
  * @fn         MT_Init
  *
