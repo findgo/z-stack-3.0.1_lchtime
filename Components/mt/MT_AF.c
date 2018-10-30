@@ -54,6 +54,7 @@
 #include "stub_aps.h"
 #endif
 
+#define MT_AF_MO   1
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Constants
@@ -211,6 +212,7 @@ uint8 MT_AfCommandProcessing(uint8 *pBuf)
 
   switch (pBuf[MT_RPC_POS_CMD1])
   {
+#if MT_AF_MO == 0
     case MT_AF_REGISTER:
       MT_AfRegister(pBuf);
       break;
@@ -218,11 +220,13 @@ uint8 MT_AfCommandProcessing(uint8 *pBuf)
     case MT_AF_DELETE:
       MT_AfDelete( pBuf );
       break;
-
+    
+    case MT_AF_DATA_REQUEST_EXT: 
+#endif
     case MT_AF_DATA_REQUEST:
-//    case MT_AF_DATA_REQUEST_EXT: // by mo
       MT_AfDataRequest(pBuf);
       break;
+#if MT_AF_MO == 0
 #if defined( ZIGBEEPRO )
     case MT_AF_DATA_REQUEST_SRCRTG:
       MT_AfDataRequestSrcRtg(pBuf);
@@ -250,7 +254,7 @@ uint8 MT_AfCommandProcessing(uint8 *pBuf)
     case MT_AF_APSF_CONFIG_GET:
       MT_AfAPSF_ConfigGet(pBuf);
       break;
-
+#endif
     default:
       status = MT_RPC_ERR_COMMAND_ID;
       break;
@@ -456,7 +460,7 @@ static void MT_AfDataRequest(uint8 *pBuf)
 }
 #else
 {
-  #define MT_AF_MOREQ_MSG_LEN  4
+  #define MT_AF_MOREQ_MSG_LEN  3
 
   endPointDesc_t *epDesc;
   afAddrType_t dstAddr;
@@ -488,7 +492,7 @@ static void MT_AfDataRequest(uint8 *pBuf)
   cId = LCHTIMEAPP_CLUSTERID;
 
   /* TransId */
-  transId = *pBuf++;
+  transId = 0x00;
 
   /* TxOption */
   txOpts = AF_EN_SECURITY;
@@ -704,8 +708,8 @@ static void MT_AfInterPanCtl(uint8 *pBuf)
  * @return  none
  ***************************************************************************************************/
 void MT_AfDataConfirm(afDataConfirm_t *pMsg)
-#if 0
 {
+#if MT_AF_MO == 0
   uint8 retArray[3];
 
   retArray[0] = pMsg->hdr.status;
@@ -714,18 +718,8 @@ void MT_AfDataConfirm(afDataConfirm_t *pMsg)
 
   /* Build and send back the response */
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_AF), MT_AF_DATA_CONFIRM, 3, retArray);
-}
-#else
-{
-  uint8 retArray[2];
-
-  retArray[0] = pMsg->hdr.status;
-  retArray[1] = pMsg->transID;
-
-  /* Build and send back the response */
-  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_AF), MT_AF_DATA_CONFIRM, 2, retArray);
-}
 #endif
+}
 
 /***************************************************************************************************
  * @fn      MT_AfReflectError
@@ -738,6 +732,7 @@ void MT_AfDataConfirm(afDataConfirm_t *pMsg)
  ***************************************************************************************************/
 void MT_AfReflectError(afReflectError_t *pMsg)
 {
+#if MT_AF_MO == 0
   uint8 retArray[6];
 
   retArray[0] = pMsg->hdr.status;
@@ -749,6 +744,7 @@ void MT_AfReflectError(afReflectError_t *pMsg)
 
   /* Build and send back the response */
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_AF), MT_AF_REFLECT_ERROR, 6, retArray);
+#endif
 }
 
 /***************************************************************************************************
@@ -761,7 +757,7 @@ void MT_AfReflectError(afReflectError_t *pMsg)
  * @return      none
  ***************************************************************************************************/
 void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
-#if 0
+#if MT_AF_MO == 0
 {
   #define MT_AF_INC_MSG_LEN  20
   #define MT_AF_INC_MSG_EXT  10
@@ -924,7 +920,7 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
 }
 #else
 {
-  #define MT_AF_MOINC_MSG_LEN  4
+  #define MT_AF_MOINC_MSG_LEN  3
 
   uint16 dataLen = pMsg->cmd.DataLength;  // Length of the data section in the response packet.
   uint16 respLen = MT_AF_MOINC_MSG_LEN + dataLen;
@@ -949,7 +945,6 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
   *pTmp++ = LO_UINT16(pMsg->srcAddr.addr.shortAddr);
   *pTmp++ = HI_UINT16(pMsg->srcAddr.addr.shortAddr);
 
-  *pTmp++ = pMsg->cmd.TransSeqNumber;
   *pTmp++ = dataLen;
 
   /* Data */
