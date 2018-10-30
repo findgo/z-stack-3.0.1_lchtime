@@ -460,7 +460,7 @@ static void MT_AfDataRequest(uint8 *pBuf)
 }
 #else
 {
-  #define MT_AF_MOREQ_MSG_LEN  3
+  #define MT_AF_MOREQ_MSG_LEN  2 // 两字节地址
 
   endPointDesc_t *epDesc;
   afAddrType_t dstAddr;
@@ -470,6 +470,7 @@ static void MT_AfDataRequest(uint8 *pBuf)
   uint8 retValue = ZFailure;
   uint16 dataLen, tempLen;
 
+  tempLen = pBuf[MT_RPC_POS_LEN]; // mt的数据域长度
   /* Parse header */
   cmd0 = pBuf[MT_RPC_POS_CMD0];
   cmd1 = pBuf[MT_RPC_POS_CMD1];
@@ -500,9 +501,7 @@ static void MT_AfDataRequest(uint8 *pBuf)
   /* Radius */
   radius = AF_DEFAULT_RADIUS;
 
-
-  dataLen = *pBuf++;
-  tempLen = dataLen + MT_AF_MOREQ_MSG_LEN;
+  dataLen = tempLen - MT_AF_MOREQ_MSG_LEN; // 真实数据域长度
 
   if ( epDesc == NULL )
   {
@@ -757,8 +756,8 @@ void MT_AfReflectError(afReflectError_t *pMsg)
  * @return      none
  ***************************************************************************************************/
 void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
-#if MT_AF_MO == 0
 {
+#if MT_AF_MO == 0
   #define MT_AF_INC_MSG_LEN  20
   #define MT_AF_INC_MSG_EXT  10
 
@@ -917,10 +916,8 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ|(uint8)MT_RPC_SYS_AF), cmd, respLen, pRsp);
 
   (void)osal_mem_free(pRsp);
-}
 #else
-{
-  #define MT_AF_MOINC_MSG_LEN  3
+  #define MT_AF_MOINC_MSG_LEN  2 // 源地址两字节
 
   uint16 dataLen = pMsg->cmd.DataLength;  // Length of the data section in the response packet.
   uint16 respLen = MT_AF_MOINC_MSG_LEN + dataLen;
@@ -945,19 +942,17 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
   *pTmp++ = LO_UINT16(pMsg->srcAddr.addr.shortAddr);
   *pTmp++ = HI_UINT16(pMsg->srcAddr.addr.shortAddr);
 
-  *pTmp++ = dataLen;
-
   /* Data */
   (void)osal_memcpy(pTmp, pMsg->cmd.Data, dataLen);
-  pTmp += dataLen;
 
   /* Build and send back the response */
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ|(uint8)MT_RPC_SYS_AF), cmd, respLen, pRsp);
 
   (void)osal_mem_free(pRsp);
-}
 
 #endif
+}
+
 /**************************************************************************************************
  * @fn          MT_AfDataRetrieve
  *
