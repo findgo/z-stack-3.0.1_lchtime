@@ -613,7 +613,7 @@ static void MT_AfInterPanCtl(uint8 *pBuf)
  ***************************************************************************************************/
 void MT_AfDataConfirm(afDataConfirm_t *pMsg)
 {
-#if MT_USER_BY_MO == 0
+#if  !defined(MT_USER_BY_MO)
   uint8 retArray[3];
 
   retArray[0] = pMsg->hdr.status;
@@ -636,7 +636,7 @@ void MT_AfDataConfirm(afDataConfirm_t *pMsg)
  ***************************************************************************************************/
 void MT_AfReflectError(afReflectError_t *pMsg)
 {
-#if MT_USER_BY_MO == 0
+#if  !defined(MT_USER_BY_MO)
   uint8 retArray[6];
 
   retArray[0] = pMsg->hdr.status;

@@ -49,6 +49,7 @@
 #include "MT_SAPI.h"
 #include "MT_UART.h"
 
+#include "ZDProfile.h"
 /***************************************************************************************************
  * GLOBAL VARIABLES
  ***************************************************************************************************/
@@ -141,7 +142,7 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
       MT_SapiAppRegister(pBuf);
       break;
  //扩展命令   
- #if MT_USER_BY_MO == 1
+ #if defined(MT_USER_BY_MO)
     case MT_SAPI_RESET_FACTORY:
       MT_SapiResetFactory(pBuf);
       break;
@@ -577,8 +578,17 @@ static void MT_SapiPermitJoin(uint8 *pBuf)
   cmdId = pBuf[MT_RPC_POS_CMD1];
   pBuf += MT_RPC_FRAME_HDR_SZ;
 
+#if defined(MT_USER_BY_MO)
+  {
+    zAddrType_t dstAddr;
+    dstAddr.addr.shortAddr = osal_build_uint16( pBuf );
+    dstAddr.addrMode = AddrBroadcast;
+    // Trust Center significance is always true
+    retValue = ZDP_MgmtPermitJoinReq( &dstAddr, pBuf[2], TRUE, FALSE );
+  }
+#else
   retValue = (zb_PermitJoiningRequest(osal_build_uint16( pBuf ), pBuf[2]));
-
+#endif
   /* Build and send back the response */
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue );
 

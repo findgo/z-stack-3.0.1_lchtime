@@ -163,10 +163,10 @@ void MT_AppCnfCommissioningNotification(bdbCommissioningModeMsg_t* bdbCommission
   retArray[0] = bdbCommissioningModeMsg->bdbCommissioningStatus;
   retArray[1] = bdbCommissioningModeMsg->bdbCommissioningMode;
   retArray[2] = bdbCommissioningModeMsg->bdbRemainingCommissioningModes;
-#if  !defined(MT_USER_BY_MO)
-  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_APP_CNF), MT_APP_CNF_BDB_COMMISSIONING_NOTIFICATION, sizeof(bdbCommissioningModeMsg_t), retArray);
-#else
+#if defined(MT_USER_BY_MO)
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_BDB_COMMISSIONING_NOTIFICATION, sizeof(bdbCommissioningModeMsg_t), retArray);
+#else
+  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_APP_CNF), MT_APP_CNF_BDB_COMMISSIONING_NOTIFICATION, sizeof(bdbCommissioningModeMsg_t), retArray);
 #endif
 }
 
