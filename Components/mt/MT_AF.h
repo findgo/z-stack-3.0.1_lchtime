@@ -114,6 +114,8 @@ extern void MT_AfDataConfirm(afDataConfirm_t *pMsg);
  */
 extern void MT_AfReflectError(afReflectError_t *pMsg);
 
+extern void MT_SapiAfDataRequest(uint8 *pBuf);
+
 /*********************************************************************
 *********************************************************************/
 #endif

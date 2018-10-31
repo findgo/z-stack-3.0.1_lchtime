@@ -61,6 +61,10 @@ uint16 _sapiCallbackSub;
  * LOCAL FUNCTIONS
  ***************************************************************************************************/
 static void MT_SapiSystemReset(uint8 *pBuf);
+static void MT_SapiResetFactory(uint8 *pBuf);
+static void MT_SapiPing(uint8 *pBuf);
+static void MT_SapiReadLogicalType(uint8 *pBuf);
+static void MT_SapiWriteLogicalType(uint8 *pBuf);
 static void MT_SapiStart(uint8* pBuf);
 static void MT_SapiBindDevice(uint8 *pBuf);
 static void MT_SapiAllowBind(uint8 *pBuf);
@@ -68,9 +72,15 @@ static void MT_SapiSendData(uint8 *pBuf);
 static void MT_SapiReadCfg(uint8 *pBuf);
 static void MT_SapiWriteCfg(uint8 *pBuf);
 static void MT_SapiGetDevInfo(uint8 *pBuf);
+static void MT_SapiGetDevAllInfo(uint8 *pBuf);
 static void MT_SapiFindDev(uint8 *pBuf);
 static void MT_SapiPermitJoin(uint8 *pBuf);
 static void MT_SapiAppRegister(uint8 *pBuf);
+
+static void MT_SapiBDBStartCommissioning(uint8* pBuf);
+
+extern void MT_SapiAfDataRequest(uint8 *pBuf);
+
 
 /***************************************************************************************************
  * @fn      MT_sapiCommandProcessing
@@ -126,11 +136,35 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
     case MT_SAPI_SYS_RESET:
       MT_SapiSystemReset(pBuf);
       break;
-
+    
     case MT_SAPI_APP_REGISTER_REQ:
       MT_SapiAppRegister(pBuf);
       break;
-
+ //扩展命令   
+ #if MT_USER_BY_MO == 1
+    case MT_SAPI_RESET_FACTORY:
+      MT_SapiResetFactory(pBuf);
+      break;
+    
+    case MT_SAPI_GET_DEV_ALL_INFO_REQ:
+      MT_SapiGetDevAllInfo(pBuf);
+      break;
+    case MT_SAPI_PING:
+      MT_SapiPing(pBuf);
+      break;
+    case MT_SAPI_READ_LOGICAL_TYPE:
+      MT_SapiReadLogicalType(pBuf);
+      break;
+    case MT_SAPI_WRITE_LOGICAL_TYPE:
+      MT_SapiWriteLogicalType(pBuf);
+      break;
+    case MT_SAPI_AF_DATA_REQUEST:
+      MT_SapiAfDataRequest(pBuf);
+      break;
+    case MT_SAPI_BDB_START_COMMISSIONING:
+      MT_SapiBDBStartCommissioning(pBuf);
+      break;
+ #endif
     default:
       status = MT_RPC_ERR_COMMAND_ID;
       break;
@@ -152,7 +186,38 @@ static void MT_SapiSystemReset(uint8 *pBuf)
 {
   zb_SystemReset();
 }
+static void MT_SapiResetFactory(uint8 *pBuf)
+{
+    uint8 value = 0x01;
+    
+    osal_nv_write(ZCD_NV_LOGICAL_TYPE, 0, 1, &value);
+    SystemResetSoft();
+}
+static void MT_SapiPing(uint8 *pBuf)
+{
+    MT_BuildAndSendZToolResponse( ((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_PING, 0, NULL );
+}
+static void MT_SapiReadLogicalType(uint8 *pBuf)
+{
+    uint8 retStatus;
+    uint8 buf[2];
+    
+    retStatus = zb_ReadConfiguration(ZCD_NV_LOGICAL_TYPE, 1, buf + 1);
+    buf[0] = retStatus;
+    MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_READ_LOGICAL_TYPE, 2, buf);
+}
+static void MT_SapiWriteLogicalType(uint8 *pBuf)
+{
+    uint8 retValue = ZFailure;
+    
+    /* Parse header */
+    pBuf += MT_RPC_FRAME_HDR_SZ;
+    
+    if((*pBuf < ZG_DEVICETYPE_ENDDEVICE))
+        retValue = zb_WriteConfiguration(ZCD_NV_LOGICAL_TYPE, 1, pBuf);
 
+    MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_WRITE_LOGICAL_TYPE, 1, &retValue);   
+}
 /***************************************************************************************************
  * @fn          MT_SapiStart
  *
@@ -425,6 +490,52 @@ static void MT_SapiGetDevInfo(uint8 *pBuf)
   }
 }
 
+static void MT_SapiGetDevAllInfo(uint8 *pBuf)
+{
+  uint8 *pRetBuf;
+  uint8 *ptemp;
+  uint8 cmdId;
+  uint8 size;
+  /* parse header */
+  cmdId = pBuf[MT_RPC_POS_CMD1];
+  pBuf += MT_RPC_FRAME_HDR_SZ;
+
+  size = sizeof(uint8) * 2 + (Z_EXTADDR_LEN  + sizeof(uint16) ) * 3;
+  pRetBuf = osal_mem_alloc(size);
+  if (pRetBuf)
+  {
+    ptemp = pRetBuf;
+    // device state
+    zb_GetDeviceInfo(ZB_INFO_DEV_STATE, ptemp);
+    ptemp += sizeof(uint8);
+    //short address
+    zb_GetDeviceInfo(ZB_INFO_SHORT_ADDR, ptemp);
+    ptemp += sizeof(uint16);
+    // ieee address
+    zb_GetDeviceInfo(ZB_INFO_IEEE_ADDR, ptemp);
+    ptemp += Z_EXTADDR_LEN;
+    // parent short address
+    zb_GetDeviceInfo(ZB_INFO_PARENT_SHORT_ADDR, ptemp);
+    ptemp += sizeof(uint8);
+    // parent ieee address
+    zb_GetDeviceInfo(ZB_INFO_PARENT_IEEE_ADDR, ptemp);
+    ptemp += Z_EXTADDR_LEN;
+    // channell
+    zb_GetDeviceInfo(ZB_INFO_CHANNEL, ptemp);
+    ptemp += sizeof(uint8);
+    // panid
+    zb_GetDeviceInfo(ZB_INFO_PAN_ID, ptemp);
+    ptemp += sizeof(uint16);
+    // extend panid
+    zb_GetDeviceInfo(ZB_INFO_EXT_PAN_ID, ptemp);
+    ptemp += Z_EXTADDR_LEN;
+
+    MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, size, pRetBuf );
+
+    osal_mem_free(pRetBuf);
+  }
+}
+
 /***************************************************************************************************
  * @fn          MT_SapiFindDev
  *
@@ -615,6 +726,23 @@ void zb_MTCallbackReceiveDataIndication( uint16 source, uint16 command, uint16 l
   }
 }
 #endif  /* MT_SAPI_CB_FUNC */
+
+// 移MT_APP_CONFIG指令过来
+#include "MT_APP_CONFIG.h"
+static void MT_SapiBDBStartCommissioning(uint8* pBuf)
+{
+  uint8 retValue = ZSuccess;
+  uint8 cmdId;
+  
+  /* parse header */
+  cmdId = pBuf[MT_RPC_POS_CMD1];
+  pBuf += MT_RPC_FRAME_HDR_SZ;
+  
+  bdb_StartCommissioning(*pBuf);
+  
+  /* Build and send back the response */
+  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue);
+}
 
 /***************************************************************************************************
  ***************************************************************************************************/

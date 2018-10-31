@@ -1903,10 +1903,15 @@ void MT_SysResetInd(void)
 
   retArray[0] = ResetReason();   /* Reason */
   osal_memcpy( &retArray[1], MTVersionString, 5 );   /* Revision info */
-
+#if  !defined(MT_USER_BY_MO)
   /* Send out Reset Response message */
   MT_BuildAndSendZToolResponse( MT_ARSP_SYS, MT_SYS_RESET_IND,
                                 sizeof(retArray), retArray);
+#else
+    // 将复位指示移到sapi
+    MT_BuildAndSendZToolResponse( ((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_RESET_IND,
+                                  sizeof(retArray), retArray);
+#endif
 }
 
 /******************************************************************************
