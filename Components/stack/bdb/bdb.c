@@ -2233,11 +2233,13 @@ void bdb_requestTCStackVersion(void)
  */
 void bdb_nwkSteeringDeviceOnNwk(void)
 {
+#if !defined(MT_USER_BY_MO)
   zAddrType_t dstAddr;
   dstAddr.addr.shortAddr = NWK_BROADCAST_SHORTADDR_DEVZCZR;
   dstAddr.addrMode = AddrBroadcast;
   // Trust Center significance is always true
   ZDP_MgmtPermitJoinReq( &dstAddr, BDBC_MIN_COMMISSIONING_TIME, TRUE, FALSE );
+#endif
 }
 
 

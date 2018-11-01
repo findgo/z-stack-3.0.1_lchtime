@@ -63,7 +63,6 @@ uint16 _sapiCallbackSub;
  ***************************************************************************************************/
 static void MT_SapiSystemReset(uint8 *pBuf);
 static void MT_SapiResetFactory(uint8 *pBuf);
-static void MT_SapiPing(uint8 *pBuf);
 static void MT_SapiReadLogicalType(uint8 *pBuf);
 static void MT_SapiWriteLogicalType(uint8 *pBuf);
 static void MT_SapiStart(uint8* pBuf);
@@ -79,6 +78,7 @@ static void MT_SapiPermitJoin(uint8 *pBuf);
 static void MT_SapiAppRegister(uint8 *pBuf);
 
 static void MT_SapiBDBStartCommissioning(uint8* pBuf);
+static void MT_SapiBDBZedAttemptRecoverNWK(uint8* pBuf);
 
 extern void MT_SapiAfDataRequest(uint8 *pBuf);
 
@@ -150,9 +150,6 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
     case MT_SAPI_GET_DEV_ALL_INFO_REQ:
       MT_SapiGetDevAllInfo(pBuf);
       break;
-    case MT_SAPI_PING:
-      MT_SapiPing(pBuf);
-      break;
     case MT_SAPI_READ_LOGICAL_TYPE:
       MT_SapiReadLogicalType(pBuf);
       break;
@@ -164,6 +161,9 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
       break;
     case MT_SAPI_BDB_START_COMMISSIONING:
       MT_SapiBDBStartCommissioning(pBuf);
+      break;
+    case MT_SAPI_BDB_ZED_ATTEMPT_RECOVER_NWK:
+      MT_SapiBDBZedAttemptRecoverNWK(pBuf);
       break;
  #endif
     default:
@@ -190,14 +190,13 @@ static void MT_SapiSystemReset(uint8 *pBuf)
 static void MT_SapiResetFactory(uint8 *pBuf)
 {
     uint8 value = 0x01;
+    uint8 retval;
     
-    osal_nv_write(ZCD_NV_LOGICAL_TYPE, 0, 1, &value);
-    SystemResetSoft();
+    retval = osal_nv_write(ZCD_NV_STARTUP_OPTION, 0, 1, &value);
+    
+    MT_BuildAndSendZToolResponse( ((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_RESET_FACTORY, 1, &retval);
 }
-static void MT_SapiPing(uint8 *pBuf)
-{
-    MT_BuildAndSendZToolResponse( ((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_PING, 0, NULL );
-}
+
 static void MT_SapiReadLogicalType(uint8 *pBuf)
 {
     uint8 retStatus;
@@ -214,7 +213,7 @@ static void MT_SapiWriteLogicalType(uint8 *pBuf)
     /* Parse header */
     pBuf += MT_RPC_FRAME_HDR_SZ;
     
-    if((*pBuf < ZG_DEVICETYPE_ENDDEVICE))
+    if((*pBuf <= ZG_DEVICETYPE_ENDDEVICE))
         retValue = zb_WriteConfiguration(ZCD_NV_LOGICAL_TYPE, 1, pBuf);
 
     MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_WRITE_LOGICAL_TYPE, 1, &retValue);   
@@ -578,17 +577,14 @@ static void MT_SapiPermitJoin(uint8 *pBuf)
   cmdId = pBuf[MT_RPC_POS_CMD1];
   pBuf += MT_RPC_FRAME_HDR_SZ;
 
-#if defined(MT_USER_BY_MO)
-  {
+  {// 需要认证中心认证
     zAddrType_t dstAddr;
     dstAddr.addr.shortAddr = osal_build_uint16( pBuf );
     dstAddr.addrMode = AddrBroadcast;
     // Trust Center significance is always true
     retValue = ZDP_MgmtPermitJoinReq( &dstAddr, pBuf[2], TRUE, FALSE );
   }
-#else
-  retValue = (zb_PermitJoiningRequest(osal_build_uint16( pBuf ), pBuf[2]));
-#endif
+  //retValue = zb_PermitJoiningRequest(osal_build_uint16( pBuf ), pBuf[2]);
   /* Build and send back the response */
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue );
 
@@ -749,6 +745,21 @@ static void MT_SapiBDBStartCommissioning(uint8* pBuf)
   pBuf += MT_RPC_FRAME_HDR_SZ;
   
   bdb_StartCommissioning(*pBuf);
+  
+  /* Build and send back the response */
+  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue);
+}
+
+static void MT_SapiBDBZedAttemptRecoverNWK(uint8* pBuf)
+{
+  uint8 retValue = ZSuccess;
+  uint8 cmdId;
+  
+  /* parse header */
+  cmdId = pBuf[MT_RPC_POS_CMD1];
+  pBuf += MT_RPC_FRAME_HDR_SZ;
+
+  retValue = bdb_ZedAttemptRecoverNwk();
   
   /* Build and send back the response */
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue);

@@ -313,8 +313,7 @@
                     <state>POWER_SAVING</state>
                     <state>FEATURE_SYSTEM_STATS</state>
                     <state>MT_GP_CB_FUNC</state>
-                    <state>HAL_PA_LNA</state>
-                    <state>USER_HAL_PA_LNA_RFX2401C</state>
+                    <state>HAL_PA_LNA_CC2592</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -1467,7 +1466,7 @@
                     <state>MT_GP_CB_FUNC</state>
                     <state>ASSERT_RESET</state>
                     <state>MAKE_CRC_SHDW</state>
-                    <state>HAL_PA_LNA_CC2592</state>
+                    <state>xHAL_PA_LNA_CC2592</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -2621,6 +2620,8 @@
                     <state>MT_GP_CB_FUNC</state>
                     <state>ASSERT_RESET</state>
                     <state>FAKE_CRC_SHDW</state>
+                    <state>xHAL_PA_LNA_CC2592</state>
+                    <state>MT_USER_BY_MO</state>
                     <state>HAL_PA_LNA</state>
                     <state>USER_HAL_PA_LNA_RFX2401C</state>
                 </option>
