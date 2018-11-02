@@ -1181,7 +1181,7 @@ void MT_MacSetRxGainReq(uint8 *pBuf)
   cmdId = pBuf[MT_RPC_POS_CMD1];
   pBuf += MT_RPC_FRAME_HDR_SZ;
 
-#ifdef HAL_PA_LNA
+#ifdef HAL_PA_LNA || defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
   /* Toggle PA/LNA mode */
   if (*pBuf)
   {

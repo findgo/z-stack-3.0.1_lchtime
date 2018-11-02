@@ -55,7 +55,7 @@
  * ------------------------------------------------------------------------------------------------
  */
 #define HAL_MAC_RSSI_OFFSET                         -73   /* no units */
-#if defined (HAL_PA_LNA)
+#if defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
 /* CC22591 RSSI offset */
 #define HAL_MAC_RSSI_LNA_HGM_OFFSET                 -9
 #define HAL_MAC_RSSI_LNA_LGM_OFFSET                  4

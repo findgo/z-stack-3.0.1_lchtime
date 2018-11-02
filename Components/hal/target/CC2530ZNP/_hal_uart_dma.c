@@ -124,6 +124,7 @@
 #undef HAL_UART_Px_CTS
 #undef HAL_UART_Px_RX_TX
 #if (HAL_UART_DMA == 1)
+/*
 #define PxOUT                      P0
 #define PxIN                       P0
 #define PxDIR                      P0DIR
@@ -137,6 +138,22 @@
 #define URXxIF                     URX0IF
 #define UTXxIE                     UTX0IE
 #define UTXxIF                     UTX0IF
+*/
+// 将UART0 从p0.2 p0.3修改至p1.4 p1.5
+#define PxOUT                      P1
+#define PxIN                       P1
+#define PxDIR                      P1DIR
+#define PxSEL                      P1SEL
+#define UxCSR                      U0CSR
+#define UxUCR                      U0UCR
+#define UxDBUF                     U0DBUF
+#define UxBAUD                     U0BAUD
+#define UxGCR                      U0GCR
+#define URXxIE                     URX0IE
+#define URXxIF                     URX0IF
+#define UTXxIE                     UTX0IE
+#define UTXxIF                     UTX0IF
+
 #else
 #define PxOUT                      P1
 #define PxIN                       P1
@@ -154,10 +171,16 @@
 #endif
 
 #if (HAL_UART_DMA == 1)
+/*
 #define HAL_UART_PERCFG_BIT        0x01         // USART0 on P0, Alt-1; so clear this bit.
 #define HAL_UART_Px_RX_TX          0x0C         // Peripheral I/O Select for Rx/Tx.
 #define HAL_UART_Px_RTS            0x20         // Peripheral I/O Select for RTS.
 #define HAL_UART_Px_CTS            0x10         // Peripheral I/O Select for CTS.
+*/
+#define HAL_UART_PERCFG_BIT        0x01         // USART0 on P0, Alt-2; so set this bit.
+#define HAL_UART_Px_RX_TX          0x30         // Peripheral I/O Select for Rx/Tx.
+#define HAL_UART_Px_RTS            0x08         // Peripheral I/O Select for RTS.
+#define HAL_UART_Px_CTS            0x04         // Peripheral I/O Select for CTS.
 #else
 #define HAL_UART_PERCFG_BIT        0x02         // USART1 on P1, Alt-2; so set this bit.
 #define HAL_UART_Px_RTS            0x20         // Peripheral I/O Select for RTS.
@@ -333,7 +356,8 @@ static void HalUARTInitDMA(void)
   P2DIR |= HAL_UART_PRIPO;
 
 #if (HAL_UART_DMA == 1)
-  PERCFG &= ~HAL_UART_PERCFG_BIT;    // Set UART0 I/O to Alt. 1 location on P0.
+  //PERCFG &= ~HAL_UART_PERCFG_BIT;    // Set UART0 I/O to Alt. 1 location on P0.
+  PERCFG |= HAL_UART_PERCFG_BIT;    // Set UART0 I/O to Alt. 2 location on P1.
 #else
   PERCFG |= HAL_UART_PERCFG_BIT;     // Set UART1 I/O to Alt. 2 location on P1.
 #endif

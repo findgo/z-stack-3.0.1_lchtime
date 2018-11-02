@@ -189,7 +189,7 @@ static void MT_SapiSystemReset(uint8 *pBuf)
 }
 static void MT_SapiResetFactory(uint8 *pBuf)
 {
-    uint8 value = 0x01;
+    uint8 value = 0x03;
     uint8 retval;
     
     retval = osal_nv_write(ZCD_NV_STARTUP_OPTION, 0, 1, &value);

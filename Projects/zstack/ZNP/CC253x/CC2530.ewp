@@ -2620,10 +2620,10 @@
                     <state>MT_GP_CB_FUNC</state>
                     <state>ASSERT_RESET</state>
                     <state>FAKE_CRC_SHDW</state>
-                    <state>xHAL_PA_LNA_CC2592</state>
-                    <state>MT_USER_BY_MO</state>
-                    <state>HAL_PA_LNA</state>
-                    <state>USER_HAL_PA_LNA_RFX2401C</state>
+                    <state>HAL_PA_LNA_CC2592</state>
+                    <state>xMT_USER_BY_MO</state>
+                    <state>xxHAL_PA_LNA</state>
+                    <state>xUSER_HAL_PA_LNA_RFX2401C</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>

@@ -101,9 +101,9 @@ extern unsigned char znpCfg0;
  * ------------------------------------------------------------------------------------------------
  */
 
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590)
+#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
   #define HAL_NUM_LEDS            3
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)
+#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)  || defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
   #define HAL_NUM_LEDS            1
 #else
   #error Unknown Board Indentifier
@@ -111,12 +111,20 @@ extern unsigned char znpCfg0;
 
 #define HAL_LED_BLINK_DELAY()   st( { volatile uint32 i; for (i=0; i<0x5800; i++) { }; } )
 
+#if !defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
 /* 1 - Green */
 #define LED1_BV           BV(0)
 #define LED1_SBIT         P1_0
 #define LED1_DDR          P1DIR
 #define LED1_POLARITY     ACTIVE_HIGH
+#else
+  /* 1 - Green */
+#define LED1_BV           BV(2)
+#define LED1_SBIT         P1_2
+#define LED1_DDR          P1DIR
+#define LED1_POLARITY     ACTIVE_HIGH
 
+#endif
 #if defined (HAL_BOARD_CC2530EB_REV17)
   /* 2 - Red */
   #define LED2_BV           BV(1)
@@ -314,7 +322,7 @@ extern unsigned char znpCfg0;
  */
 
 /* ----------- RF-frontend Connection Initialization ---------- */
-#if defined HAL_PA_LNA || defined HAL_PA_LNA_CC2590
+#if defined HAL_PA_LNA || defined HAL_PA_LNA_CC2590  || defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
 extern void MAC_RfFrontendSetup(void);
 #define HAL_BOARD_RF_FRONTEND_SETUP() MAC_RfFrontendSetup()
 #else
@@ -343,7 +351,7 @@ extern void MAC_RfFrontendSetup(void);
 #endif
 
 /* ----------- Board Initialization ---------- */
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590)
+#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
 
 #define HAL_BOARD_INIT() st                                      \
 (                                                                \
@@ -362,7 +370,7 @@ extern void MAC_RfFrontendSetup(void);
   PREFETCH_ENABLE();                                             \
 )
 
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)
+#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590) || defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
 
 #ifdef HAL_ENABLE_WIFI_COEX_PINS
 #define HAL_BOARD_ENABLE_WIFI_COEX_PINS() st                                      \
@@ -434,7 +442,7 @@ extern void MAC_RfFrontendSetup(void);
 #define HAL_PUSH_BUTTON6()        (0)
 
 /* ----------- LED's ---------- */
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590)
+#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
 
   #define HAL_TURN_OFF_LED1()       st( LED1_SBIT = LED1_POLARITY (0); )
   #define HAL_TURN_OFF_LED2()       st( LED2_SBIT = LED2_POLARITY (0); )
@@ -456,7 +464,7 @@ extern void MAC_RfFrontendSetup(void);
   #define HAL_STATE_LED3()          (LED3_POLARITY (LED3_SBIT))
   #define HAL_STATE_LED4()          HAL_STATE_LED1()
 
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)
+#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590) || defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
 
   #define HAL_TURN_OFF_LED1()       st( LED1_SBIT = LED1_POLARITY (0); )
   #define HAL_TURN_OFF_LED2()       HAL_TURN_OFF_LED1()
