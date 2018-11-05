@@ -516,7 +516,7 @@ static void MT_SapiGetDevAllInfo(uint8 *pBuf)
     ptemp += Z_EXTADDR_LEN;
     // parent short address
     zb_GetDeviceInfo(ZB_INFO_PARENT_SHORT_ADDR, ptemp);
-    ptemp += sizeof(uint8);
+    ptemp += sizeof(uint16);
     // parent ieee address
     zb_GetDeviceInfo(ZB_INFO_PARENT_IEEE_ADDR, ptemp);
     ptemp += Z_EXTADDR_LEN;

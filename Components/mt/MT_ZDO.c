@@ -2197,12 +2197,12 @@ void MT_ZdoStateChangeCB(osal_event_hdr_t *pMsg)
   uint8 status;
 
   if(pMsg->status == DEV_ROUTER || pMsg->status == DEV_END_DEVICE || pMsg->status == DEV_ZB_COORD){
-    status = 1;
+    status = 0;
     MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_ZDO),
                                            MT_ZDO_STATE_CHANGE_IND, 1, &status);
   }
   else if(pMsg->status == DEV_HOLD || pMsg->status == DEV_INIT || pMsg->status == DEV_NWK_ORPHAN){
-    status = 0;
+    status = 1;
     MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_AREQ | (uint8)MT_RPC_SYS_ZDO),
                                            MT_ZDO_STATE_CHANGE_IND, 1, &status);
   }
