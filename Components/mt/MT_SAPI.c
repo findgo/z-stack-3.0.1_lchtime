@@ -48,7 +48,7 @@
 #include "MT.h"
 #include "MT_SAPI.h"
 #include "MT_UART.h"
-
+#include "ZDAPP.h"
 #include "ZDProfile.h"
 /***************************************************************************************************
  * GLOBAL VARIABLES
@@ -77,8 +77,7 @@ static void MT_SapiFindDev(uint8 *pBuf);
 static void MT_SapiPermitJoin(uint8 *pBuf);
 static void MT_SapiAppRegister(uint8 *pBuf);
 
-static void MT_SapiBDBStartCommissioning(uint8* pBuf);
-static void MT_SapiBDBZedAttemptRecoverNWK(uint8* pBuf);
+static void MT_SapiStartNwk(uint8* pBuf);
 
 extern void MT_SapiAfDataRequest(uint8 *pBuf);
 
@@ -159,11 +158,8 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
     case MT_SAPI_AF_DATA_REQUEST:
       MT_SapiAfDataRequest(pBuf);
       break;
-    case MT_SAPI_BDB_START_COMMISSIONING:
-      MT_SapiBDBStartCommissioning(pBuf);
-      break;
-    case MT_SAPI_BDB_ZED_ATTEMPT_RECOVER_NWK:
-      MT_SapiBDBZedAttemptRecoverNWK(pBuf);
+    case MT_SAPI_START_NWK:
+      MT_SapiStartNwk(pBuf);
       break;
  #endif
     default:
@@ -500,11 +496,12 @@ static void MT_SapiGetDevAllInfo(uint8 *pBuf)
   cmdId = pBuf[MT_RPC_POS_CMD1];
   pBuf += MT_RPC_FRAME_HDR_SZ;
 
-  size = sizeof(uint8) * 2 + (Z_EXTADDR_LEN  + sizeof(uint16) ) * 3;
+  size = 1 + sizeof(uint8) * 2 + (Z_EXTADDR_LEN  + sizeof(uint16) ) * 3;
   pRetBuf = osal_mem_alloc(size);
   if (pRetBuf)
   {
     ptemp = pRetBuf;
+    
     // device state
     zb_GetDeviceInfo(ZB_INFO_DEV_STATE, ptemp);
     ptemp += sizeof(uint8);
@@ -735,35 +732,29 @@ void zb_MTCallbackReceiveDataIndication( uint16 source, uint16 command, uint16 l
 
 // 移MT_APP_CONFIG指令过来
 #include "MT_APP_CONFIG.h"
-static void MT_SapiBDBStartCommissioning(uint8* pBuf)
+static void MT_SapiStartNwk(uint8* pBuf)
 {
-  uint8 retValue = ZSuccess;
-  uint8 cmdId;
-  
+//  uint8 retValue = ZSuccess;
+//  uint8 cmdId;
+  uint8 logicaltype;
   /* parse header */
-  cmdId = pBuf[MT_RPC_POS_CMD1];
-  pBuf += MT_RPC_FRAME_HDR_SZ;
-  
-  bdb_StartCommissioning(*pBuf);
-  
-  /* Build and send back the response */
-  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue);
-}
-
-static void MT_SapiBDBZedAttemptRecoverNWK(uint8* pBuf)
-{
-  uint8 retValue = ZSuccess;
-  uint8 cmdId;
-  
-  /* parse header */
-  cmdId = pBuf[MT_RPC_POS_CMD1];
+//  cmdId = pBuf[MT_RPC_POS_CMD1];
   pBuf += MT_RPC_FRAME_HDR_SZ;
 
-  retValue = bdb_ZedAttemptRecoverNwk();
+
+  if(zb_ReadConfiguration(ZCD_NV_LOGICAL_TYPE, 1, &logicaltype) == ZFailure)
+    return;
+  
+  if((devState == DEV_NWK_ORPHAN) &&  (logicaltype == ZG_DEVICETYPE_ENDDEVICE)){
+    bdb_ZedAttemptRecoverNwk();
+  }
+  else{
+    bdb_StartCommissioning(*pBuf);
+  }
+  
   
   /* Build and send back the response */
-  MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue);
+  //MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), cmdId, 1, &retValue);
 }
-
 /***************************************************************************************************
  ***************************************************************************************************/
