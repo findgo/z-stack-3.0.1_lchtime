@@ -63,7 +63,6 @@ uint16 _sapiCallbackSub;
  ***************************************************************************************************/
 static void MT_SapiSystemReset(uint8 *pBuf);
 static void MT_SapiResetFactory(uint8 *pBuf);
-static void MT_SapiReadLogicalType(uint8 *pBuf);
 static void MT_SapiWriteLogicalType(uint8 *pBuf);
 static void MT_SapiStart(uint8* pBuf);
 static void MT_SapiBindDevice(uint8 *pBuf);
@@ -149,9 +148,6 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
     case MT_SAPI_GET_DEV_ALL_INFO_REQ:
       MT_SapiGetDevAllInfo(pBuf);
       break;
-    case MT_SAPI_READ_LOGICAL_TYPE:
-      MT_SapiReadLogicalType(pBuf);
-      break;
     case MT_SAPI_WRITE_LOGICAL_TYPE:
       MT_SapiWriteLogicalType(pBuf);
       break;
@@ -193,15 +189,6 @@ static void MT_SapiResetFactory(uint8 *pBuf)
     MT_BuildAndSendZToolResponse( ((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_RESET_FACTORY, 1, &retval);
 }
 
-static void MT_SapiReadLogicalType(uint8 *pBuf)
-{
-    uint8 retStatus;
-    uint8 buf[2];
-    
-    retStatus = zb_ReadConfiguration(ZCD_NV_LOGICAL_TYPE, 1, buf + 1);
-    buf[0] = retStatus;
-    MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_SAPI), MT_SAPI_READ_LOGICAL_TYPE, 2, buf);
-}
 static void MT_SapiWriteLogicalType(uint8 *pBuf)
 {
     uint8 retValue = ZFailure;
@@ -492,18 +479,31 @@ static void MT_SapiGetDevAllInfo(uint8 *pBuf)
   uint8 *ptemp;
   uint8 cmdId;
   uint8 size;
+  uint8 tempValue;
+  
   /* parse header */
   cmdId = pBuf[MT_RPC_POS_CMD1];
   pBuf += MT_RPC_FRAME_HDR_SZ;
 
-  size = 1 + sizeof(uint8) * 2 + (Z_EXTADDR_LEN  + sizeof(uint16) ) * 3;
+  size = sizeof(uint8) * 3 + (Z_EXTADDR_LEN  + sizeof(uint16) ) * 3;
   pRetBuf = osal_mem_alloc(size);
   if (pRetBuf)
   {
     ptemp = pRetBuf;
-    
+
+    // device type
+    if(zb_ReadConfiguration(ZCD_NV_LOGICAL_TYPE, 1, ptemp) != ZSUCCESS){
+        *ptemp = 0x03; // 读不成功,提示一个无效值给上层 
+    }
+    ptemp += sizeof(uint8);
     // device state
-    zb_GetDeviceInfo(ZB_INFO_DEV_STATE, ptemp);
+    zb_GetDeviceInfo(ZB_INFO_DEV_STATE, &tempValue);
+    if(tempValue == DEV_END_DEVICE || tempValue == DEV_ZB_COORD || tempValue == DEV_ROUTER){
+        *ptemp = 0x01; // 表示已入网 
+    }
+    else{
+        *ptemp = 0x00; //表示未入网
+    }
     ptemp += sizeof(uint8);
     //short address
     zb_GetDeviceInfo(ZB_INFO_SHORT_ADDR, ptemp);
@@ -744,8 +744,9 @@ static void MT_SapiStartNwk(uint8* pBuf)
 
   if(zb_ReadConfiguration(ZCD_NV_LOGICAL_TYPE, 1, &logicaltype) == ZFailure)
     return;
-  
-  if((devState == DEV_NWK_ORPHAN) &&  (logicaltype == ZG_DEVICETYPE_ENDDEVICE)){
+
+  // 如果是终端,并失去父节点,偿试恢复网络
+  if((devState == DEV_NWK_ORPHAN) &&  (logicaltype == ZG_DEVICETYPE_ENDDEVICE)){ 
     bdb_ZedAttemptRecoverNwk();
   }
   else{

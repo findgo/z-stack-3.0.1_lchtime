@@ -826,7 +826,7 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
 
   uint16 dataLen = pMsg->cmd.DataLength;  // Length of the data section in the response packet.
   uint16 respLen = MT_USER_BY_MOINC_MSG_LEN + dataLen;
-  uint8 cmd = MT_AF_INCOMING_MSG;
+  uint8 cmd = MT_SAPI_AF_INCOMING_MSG;
   uint8 *pRsp, *pTmp;
 
   if ((pMsg->srcAddr.addrMode == afAddr64Bit) ||

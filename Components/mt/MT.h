@@ -387,7 +387,7 @@ extern "C"
 // by mo
 #define MT_SAPI_RESET_FACTORY               0x70
 #define MT_SAPI_GET_DEV_ALL_INFO_REQ        0x71
-#define MT_SAPI_READ_LOGICAL_TYPE           0x72
+// 0x72不用
 #define MT_SAPI_WRITE_LOGICAL_TYPE          0x73
 #define MT_SAPI_AF_DATA_REQUEST             0x7a
 /* AREQ to host */
