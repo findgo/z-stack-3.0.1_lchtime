@@ -45,7 +45,6 @@
  *                                           Includes
  * ------------------------------------------------------------------------------------------------
  */
-
 #include "hal_mcu.h"
 #include "hal_defs.h"
 #include "hal_types.h"
@@ -116,22 +115,22 @@
 #define HAL_LED_BLINK_DELAY()   st( { volatile uint32 i; for (i=0; i<0x5800; i++) { }; } )
 
 /* 1 - Green */
-#define LED1_BV           BV(0)
-#define LED1_SBIT         P1_0
-#define LED1_DDR          P1DIR
+#define LED1_BV           BV(3)
+#define LED1_SBIT         P0_3
+#define LED1_DDR          P0DIR
 #define LED1_POLARITY     ACTIVE_HIGH
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
   /* 2 - Red */
-  #define LED2_BV           BV(1)
-  #define LED2_SBIT         P1_1
-  #define LED2_DDR          P1DIR
+  #define LED2_BV           BV(4)
+  #define LED2_SBIT         P0_4
+  #define LED2_DDR          P0DIR
   #define LED2_POLARITY     ACTIVE_HIGH
 
   /* 3 - Yellow */
-  #define LED3_BV           BV(4)
-  #define LED3_SBIT         P1_4
-  #define LED3_DDR          P1DIR
+  #define LED3_BV           BV(5)
+  #define LED3_SBIT         P0_5
+  #define LED3_DDR          P0DIR
   #define LED3_POLARITY     ACTIVE_HIGH
 
 #ifdef ENABLE_LED4_DISABLE_S1
@@ -146,6 +145,137 @@
 #endif
 #endif
 
+// 配置3个继电器IO by mo add 20181124
+/* 1 */
+#define COIL1_BV           BV(6)
+#define COIL1_SBIT         P0_6
+#define COIL1_DDR          P0DIR
+#define COIL1_POLARITY     ACTIVE_LOW
+
+/* 2 */
+#define COIL2_BV           BV(2)
+#define COIL2_SBIT         P1_2
+#define COIL2_DDR          P1DIR
+#define COIL2_POLARITY     ACTIVE_LOW
+
+/* 3 */
+#define COIL3_BV           BV(3)
+#define COIL3_SBIT         P1_3
+#define COIL3_DDR          P1DIR
+#define COIL3_POLARITY     ACTIVE_LOW
+
+#define HAL_TURN_OFF_COIL1()       st( COIL1_SBIT = COIL1_POLARITY (0); )
+#define HAL_TURN_OFF_COIL2()       st( COIL2_SBIT = COIL2_POLARITY (0); )
+#define HAL_TURN_OFF_COIL3()       st( COIL3_SBIT = COIL3_POLARITY (0); )
+
+#define HAL_TURN_ON_COIL1()        st( COIL1_SBIT = COIL1_POLARITY (1); )
+#define HAL_TURN_ON_COIL2()        st( COIL2_SBIT = COIL2_POLARITY (1); )
+#define HAL_TURN_ON_COIL3()        st( COIL3_SBIT = COIL3_POLARITY (1); )
+
+#define HAL_TOGGLE_COIL1()         st( if (COIL1_SBIT) { COIL1_SBIT = 0; } else { COIL1_SBIT = 1;} )
+#define HAL_TOGGLE_COIL2()         st( if (COIL2_SBIT) { COIL2_SBIT = 0; } else { COIL2_SBIT = 1;} )
+#define HAL_TOGGLE_COIL3()         st( if (COIL3_SBIT) { COIL3_SBIT = 0; } else { COIL3_SBIT = 1;} )
+
+#define HAL_STATE_COIL1()          (COIL1_POLARITY (COIL1_SBIT))   
+#define HAL_STATE_COIL2()          (COIL2_POLARITY (COIL2_SBIT))
+#define HAL_STATE_COIL3()          (COIL3_POLARITY (COIL3_SBIT))
+
+/* ------------------------------------------------------------------------------------------------
+ *                                       GPIO Configuration
+ * ------------------------------------------------------------------------------------------------
+ */
+
+
+#ifndef HAL_GPIO
+#define HAL_GPIO TRUE
+#endif
+/*
+#if defined CC2530_MK
+#define GPIO_0_PORT         0
+#define GPIO_0_PIN          6
+#define GPIO_1_PORT         0
+#define GPIO_1_PIN          7
+#define GPIO_2_PORT         1
+#define GPIO_2_PIN          6
+#define GPIO_3_PORT         1
+#define GPIO_3_PIN          7
+#else
+#define GPIO_0_PORT         0
+#define GPIO_0_PIN          0
+#define GPIO_1_PORT         0
+#define GPIO_1_PIN          1
+#define GPIO_2_PORT         0
+#define GPIO_2_PIN          6
+#define GPIO_3_PORT         1
+#define GPIO_3_PIN          0
+#endif
+*/
+// Used as "func" for the macros below
+#define MCU_IO_TRISTATE     1
+#define MCU_IO_PULLUP       2
+#define MCU_IO_PULLDOWN     3
+        
+#define GPIO_DIR_IN(IDX)    MCU_IO_DIR_INPUT(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN)
+#define GPIO_DIR_OUT(IDX)   MCU_IO_DIR_OUTPUT(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN)
+#define GPIO_TRI(IDX)       MCU_IO_INPUT(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN, MCU_IO_TRISTATE)
+#define GPIO_PULL_UP(IDX)   MCU_IO_INPUT(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN, MCU_IO_PULLUP)
+#define GPIO_PULL_DN(IDX)   MCU_IO_INPUT(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN, MCU_IO_PULLDOWN)
+#define GPIO_SET(IDX)       MCU_IO_SET_HIGH(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN)
+#define GPIO_CLR(IDX)       MCU_IO_SET_LOW(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN)
+#define GPIO_TOG(IDX)       MCU_IO_TGL(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN)
+#define GPIO_GET(IDX)       MCU_IO_GET(GPIO_##IDX##_PORT, GPIO_##IDX##_PIN)
+#define GPIO_HiD_SET()     (PICTL |=  BV(7))  /* PADSC */
+#define GPIO_HiD_CLR()     (PICTL &= ~BV(7))  /* PADSC */
+
+//-----------------------------------------------------------------------------
+//  Macros for simple configuration of IO pins on TI LPW SoCs
+//-----------------------------------------------------------------------------
+#define MCU_IO_PERIPHERAL(port, pin)   MCU_IO_PERIPHERAL_PREP(port, pin)
+#define MCU_IO_INPUT(port, pin, func)  MCU_IO_INPUT_PREP(port, pin, func)
+#define MCU_IO_OUTPUT(port, pin, val)  MCU_IO_OUTPUT_PREP(port, pin, val)
+#define MCU_IO_SET(port, pin, val)     MCU_IO_SET_PREP(port, pin, val)
+#define MCU_IO_SET_HIGH(port, pin)     MCU_IO_SET_HIGH_PREP(port, pin)
+#define MCU_IO_SET_LOW(port, pin)      MCU_IO_SET_LOW_PREP(port, pin)
+#define MCU_IO_TGL(port, pin)          MCU_IO_TGL_PREP(port, pin)
+#define MCU_IO_GET(port, pin)          MCU_IO_GET_PREP(port, pin)
+
+#define MCU_IO_DIR_INPUT(port, pin)    MCU_IO_DIR_INPUT_PREP(port, pin)
+#define MCU_IO_DIR_OUTPUT(port, pin)   MCU_IO_DIR_OUTPUT_PREP(port, pin)
+
+//----------------------------------------------------------------------------------
+//  Macros for internal use (the macros above need a new round in the preprocessor)
+//----------------------------------------------------------------------------------
+#define MCU_IO_PERIPHERAL_PREP(port, pin)   st( P##port##SEL |= BV(pin); )
+
+#define MCU_IO_INPUT_PREP(port, pin, func)  st( P##port##SEL &= ~BV(pin); \
+                                                P##port##DIR &= ~BV(pin); \
+                                                switch (func) { \
+                                                case MCU_IO_PULLUP: \
+                                                    P##port##INP &= ~BV(pin); \
+                                                    P2INP &= ~BV(port + 5); \
+                                                    break; \
+                                                case MCU_IO_PULLDOWN: \
+                                                    P##port##INP &= ~BV(pin); \
+                                                    P2INP |= BV(port + 5); \
+                                                    break; \
+                                                default: \
+                                                    P##port##INP |= BV(pin); \
+                                                    break; } )
+
+#define MCU_IO_OUTPUT_PREP(port, pin, val)  st( P##port##SEL &= ~BV(pin); \
+                                                P##port##_##pin = val; \
+                                                P##port##DIR |= BV(pin); )
+
+#define MCU_IO_SET_HIGH_PREP(port, pin)     st( P##port##_##pin = 1; )
+#define MCU_IO_SET_LOW_PREP(port, pin)      st( P##port##_##pin = 0; )
+
+#define MCU_IO_SET_PREP(port, pin, val)     st( P##port##_##pin = val; )
+#define MCU_IO_TGL_PREP(port, pin)          st( P##port##_##pin ^= 1; )
+#define MCU_IO_GET_PREP(port, pin)          (P##port & BV(pin))
+
+#define MCU_IO_DIR_INPUT_PREP(port, pin)    st( P##port##DIR &= ~BV(pin); )
+#define MCU_IO_DIR_OUTPUT_PREP(port, pin)   st( P##port##DIR |= BV(pin); )
+
 /* ------------------------------------------------------------------------------------------------
  *                                    Push Button Configuration
  * ------------------------------------------------------------------------------------------------
@@ -155,8 +285,8 @@
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
 
 /* S1 */
-#define PUSH1_BV          BV(1)
-#define PUSH1_SBIT        P0_1
+#define PUSH1_BV          BV(0)
+#define PUSH1_SBIT        P0_0
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
   #define PUSH1_POLARITY    ACTIVE_HIGH
@@ -167,9 +297,18 @@
 #endif
 
 /* Joystick Center Press */
-#define PUSH2_BV          BV(0)
-#define PUSH2_SBIT        P2_0
+//#define PUSH2_BV          BV(0)
+//#define PUSH2_SBIT        P2_0
+//#define PUSH2_POLARITY    ACTIVE_HIGH
+// S2 add by mo 20181114
+#define PUSH2_BV          BV(1)
+#define PUSH2_SBIT        P0_1
 #define PUSH2_POLARITY    ACTIVE_HIGH
+// S3 add by mo 20181114
+#define PUSH3_BV          BV(2)
+#define PUSH3_SBIT        P0_2
+#define PUSH3_POLARITY    ACTIVE_HIGH
+
 
 /* ------------------------------------------------------------------------------------------------
  *                                    LCD Configuration
@@ -358,7 +497,7 @@ extern void MAC_RfFrontendSetup(void);
 /* ----------- Push Buttons ---------- */
 #define HAL_PUSH_BUTTON1()        (PUSH1_POLARITY (PUSH1_SBIT))
 #define HAL_PUSH_BUTTON2()        (PUSH2_POLARITY (PUSH2_SBIT))
-#define HAL_PUSH_BUTTON3()        (0)
+#define HAL_PUSH_BUTTON3()        (PUSH3_POLARITY (PUSH3_SBIT))
 #define HAL_PUSH_BUTTON4()        (0)
 #define HAL_PUSH_BUTTON5()        (0)
 #define HAL_PUSH_BUTTON6()        (0)

@@ -50,7 +50,26 @@ extern "C"
  * INCLUDES
  */
 #include "zcl.h"
-   
+#include "hal_led.h"
+#include "mcoils.h"
+
+#define LED1_TURN(isblue)       HalLedSet(HAL_LED_1, ((isblue) > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
+#define LED1_BLINK()            HalLedBlink(HAL_LED_1, 1, 5, 1000)
+#define LED2_TURN(isblue)       HalLedSet(HAL_LED_2, ((isblue) > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
+#define LED2_BLINK()            HalLedBlink(HAL_LED_2, 1, 5, 1000)
+#define LED3_TURN(isblue)       HalLedSet(HAL_LED_3, ((isblue) > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
+#define LED3_BLINK()            HalLedBlink(HAL_LED_3, 1, 5, 1000)
+
+#define COIL1_TRUN(ison)        mCoilsSet(MCOILS_1, ((ison) > 0) ? MCOILS_MODE_ON : MCOILS_MODE_OFF)
+#define COIL1_TOGGLE()          mCoilsSet(MCOILS_1, MCOILS_MODE_TOGGLE)
+#define COIL1_STATE()           mCoilsGetStasus(MCOILS_1)
+#define COIL2_TRUN(ison)        mCoilsSet(MCOILS_2, ((ison) > 0) ? MCOILS_MODE_ON : MCOILS_MODE_OFF)
+#define COIL2_TOGGLE()          mCoilsSet(MCOILS_2, MCOILS_MODE_TOGGLE)
+#define COIL2_STATE()           mCoilsGetStasus(MCOILS_2)
+#define COIL3_TRUN(ison)        mCoilsSet(MCOILS_3, ((ison) > 0) ? MCOILS_MODE_ON : MCOILS_MODE_OFF)
+#define COIL3_TOGGLE()          mCoilsSet(MCOILS_3, MCOILS_MODE_TOGGLE)
+#define COIL3_STATE()           mCoilsGetStasus(MCOILS_3)
+
 // Added to include ZLL Target functionality
 #if defined ( BDB_TL_INITIATOR ) || defined ( BDB_TL_TARGET )
   #include "zcl_general.h"
@@ -59,7 +78,7 @@ extern "C"
 /*********************************************************************
  * CONSTANTS
  */
-#define SAMPLELIGHT_ENDPOINT            8
+#define SAMPLELIGHT_ENDPOINT2            8
 
 #define SAMPLELIGHT_NUM_GRPS            2 // Needed to include ZLL Target functionality
   

@@ -248,7 +248,7 @@ void OnBoard_KeyCallback ( uint8 keys, uint8 state )
   uint8 shift;
   (void)state;
 
-  shift = (keys & HAL_KEY_SW_6) ? true : false;
+  shift = ((keys & HAL_KEY_SW_1) || (keys & HAL_KEY_SW_2) || (keys & HAL_KEY_SW_3)) ? true : false;
 
   if ( OnBoard_SendKeys( keys, shift ) != ZSuccess )
   {
@@ -265,7 +265,7 @@ void OnBoard_KeyCallback ( uint8 keys, uint8 state )
     {
     }
     // Process SW4 here
-    if ( keys & HAL_KEY_SW_4 )  // Switch 4
+/*    if ( keys & HAL_KEY_SW_4 )  // Switch 4
     {
     }
     // Process SW5 here
@@ -275,7 +275,7 @@ void OnBoard_KeyCallback ( uint8 keys, uint8 state )
     // Process SW6 here
     if ( keys & HAL_KEY_SW_6 )  // Switch 6
     {
-    }
+    }*/
   }
 }
 

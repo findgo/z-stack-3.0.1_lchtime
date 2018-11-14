@@ -279,7 +279,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -1440,7 +1440,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -2602,7 +2602,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -2642,17 +2642,17 @@
                     <state>xMT_ZDO_FUNC</state>
                     <state>xMT_ZDO_MGMT</state>
                     <state>xMT_APP_CNF_FUNC</state>
-                    <state>LCD_SUPPORTED=DEBUG</state>
+                    <state>xLCD_SUPPORTED=DEBUG</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
                     <state>ZCL_READ</state>
-                    <state>ZCL_DISCOVER</state>
                     <state>ZCL_WRITE</state>
                     <state>ZCL_BASIC</state>
                     <state>ZCL_IDENTIFY</state>
                     <state>ZCL_ON_OFF</state>
-                    <state>ZCL_SCENES</state>
-                    <state>ZCL_GROUPS</state>
-                    <state>ZCL_LEVEL_CTRL</state>
+                    <state>xZCL_DISCOVER</state>
+                    <state>xZCL_SCENES</state>
+                    <state>xZCL_GROUPS</state>
+                    <state>xZCL_LEVEL_CTRL</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -3490,13 +3490,26 @@
     <group>
         <name>App</name>
         <file>
+            <name>$PROJ_DIR$\..\Source\mcoils.c</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\Source\OSAL_SampleLight.c</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\Source\zcl_sampleapps_ui.c</name>
+            <excluded>
+                <configuration>CoordinatorEB</configuration>
+                <configuration>RouterEB</configuration>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\Source\zcl_sampleapps_ui.h</name>
+            <excluded>
+                <configuration>CoordinatorEB</configuration>
+                <configuration>RouterEB</configuration>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\Source\zcl_samplelight.c</name>

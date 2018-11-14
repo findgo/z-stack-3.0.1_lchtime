@@ -137,8 +137,8 @@ extern uint8 aExtendedAddress[8];
 
 // These Key definitions are unique to this development system.
 // They are used to bypass functions when starting up the device.
-#define SW_BYPASS_NV    HAL_KEY_SW_5  // Bypass Network layer NV restore
-#define SW_BYPASS_START HAL_KEY_SW_1  // Bypass Network initialization
+#define SW_BYPASS_NV    HAL_KEY_SW_8  // Bypass Network layer NV restore  // change by mo 20181114
+#define SW_BYPASS_START HAL_KEY_SW_8  // Bypass Network initialization
 
 // LCD Support Defintions
 #ifdef LCD_SUPPORTED

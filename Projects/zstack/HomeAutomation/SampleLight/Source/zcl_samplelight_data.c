@@ -776,7 +776,7 @@ const cId_t zclSampleLight_InClusterList[] =
  
 SimpleDescriptionFormat_t zclSampleLight_SimpleDesc =
 {
-  SAMPLELIGHT_ENDPOINT,                  //  int Endpoint;
+  SAMPLELIGHT_ENDPOINT2,                  //  int Endpoint;
   ZCL_HA_PROFILE_ID,                     //  uint16 AppProfId;
 #ifdef ZCL_LEVEL_CTRL
   ZCL_HA_DEVICEID_DIMMABLE_LIGHT,        //  uint16 AppDeviceId;
@@ -795,7 +795,7 @@ SimpleDescriptionFormat_t zclSampleLight_SimpleDesc =
 #if defined ( BDB_TL_INITIATOR ) || defined ( BDB_TL_TARGET )
 bdbTLDeviceInfo_t tlSampleLight_DeviceInfo =
 {
-  SAMPLELIGHT_ENDPOINT,                  //uint8 endpoint;
+  SAMPLELIGHT_ENDPOINT2,                  //uint8 endpoint;
   ZCL_HA_PROFILE_ID,                        //uint16 profileID;
 #ifdef ZCL_LEVEL_CTRL
       ZCL_HA_DEVICEID_DIMMABLE_LIGHT,        //  uint16 AppDeviceId;

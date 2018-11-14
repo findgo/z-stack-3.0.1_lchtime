@@ -66,6 +66,7 @@ extern "C"
 #define HAL_KEY_STATE_NORMAL          0x00
 #define HAL_KEY_STATE_SHIFT           0x01
 
+#if 0
 #define HAL_KEY_SW_1 0x01  // Joystick up
 #define HAL_KEY_SW_2 0x02  // Joystick right
 #define HAL_KEY_SW_5 0x04  // Joystick center
@@ -88,7 +89,17 @@ extern "C"
 #define HAL_PUSH_BUTTON_SELECT 0x04  // Button select
 #define HAL_KEY_BUTTON_UP      0x40  // Button up
 #define HAL_KEY_BUTTON_DOWN    0x80  // Button down
-
+#else
+// add by mo
+#define HAL_KEY_SW_1 0x01  // Button S1 if available
+#define HAL_KEY_SW_2 0x02  // Button S2 if available
+#define HAL_KEY_SW_3 0x04  // Button S3 if available
+//#define HAL_KEY_SW_4 0x08  
+//#define HAL_KEY_SW_5 0x10  
+//#define HAL_KEY_SW_6 0x20  
+#define HAL_KEY_SW_7 0x40  
+#define HAL_KEY_SW_8 0x80  
+#endif
 /**************************************************************************************************
  * TYPEDEFS
  **************************************************************************************************/

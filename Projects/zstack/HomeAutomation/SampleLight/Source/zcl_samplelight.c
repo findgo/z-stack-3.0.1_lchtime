@@ -152,9 +152,9 @@ uint8 zclSampleLightSeqNum;
 afAddrType_t zclSampleLight_DstAddr;
 
 // Test Endpoint to allow SYS_APP_MSGs
-static endPointDesc_t sampleLight_TestEp =
+static endPointDesc_t sampleLight_Ep2 =
 {
-  SAMPLELIGHT_ENDPOINT,
+  SAMPLELIGHT_ENDPOINT2,
   0,
   &zclSampleLight_TaskID,
   (SimpleDescriptionFormat_t *)NULL,  // No Simple description for this test endpoint
@@ -222,11 +222,11 @@ void zclSampleLight_UpdateLedState(void);
 /*********************************************************************
  * CONSTANTS
  */
-const uiState_t zclSampleLight_UiStatesMain[] = 
-{
-  /*  UI_STATE_BACK_FROM_APP_MENU  */   {UI_STATE_DEFAULT_MOVE,       UI_STATE_TOGGLE_LIGHT,  UI_KEY_SW_5_PRESSED, &UI_ActionBackFromAppMenu}, //do not change this line, except for the second item, which should point to the last entry in this menu
-  /*  UI_STATE_TOGGLE_LIGHT        */   {UI_STATE_BACK_FROM_APP_MENU, UI_STATE_DEFAULT_MOVE,  UI_KEY_SW_5_PRESSED, &zclSampleLight_UiActionToggleLight},
-};
+//const uiState_t zclSampleLight_UiStatesMain[] = 
+//{
+//  /*  UI_STATE_BACK_FROM_APP_MENU  */   {UI_STATE_DEFAULT_MOVE,       UI_STATE_TOGGLE_LIGHT,  UI_KEY_SW_5_PRESSED, &UI_ActionBackFromAppMenu}, //do not change this line, except for the second item, which should point to the last entry in this menu
+//  /*  UI_STATE_TOGGLE_LIGHT        */   {UI_STATE_BACK_FROM_APP_MENU, UI_STATE_DEFAULT_MOVE,  UI_KEY_SW_5_PRESSED, &zclSampleLight_UiActionToggleLight},
+//};
 
 #define LEVEL_CHANGED_BY_LEVEL_CMD  0
 #define LEVEL_CHANGED_BY_ON_CMD     1
@@ -306,11 +306,11 @@ void zclSampleLight_Init( byte task_id )
   bdb_RegisterSimpleDescriptor( &zclSampleLight_SimpleDesc );
 
   // Register the ZCL General Cluster Library callback functions
-  zclGeneral_RegisterCmdCallbacks( SAMPLELIGHT_ENDPOINT, &zclSampleLight_CmdCallbacks );
+  zclGeneral_RegisterCmdCallbacks( SAMPLELIGHT_ENDPOINT2, &zclSampleLight_CmdCallbacks );
 
   // Register the application's attribute list
   zclSampleLight_ResetAttributesToDefaultValues();
-  zcl_registerAttrList( SAMPLELIGHT_ENDPOINT, zclSampleLight_NumAttributes, zclSampleLight_Attrs );
+  zcl_registerAttrList( SAMPLELIGHT_ENDPOINT2, zclSampleLight_NumAttributes, zclSampleLight_Attrs );
 
 #ifdef ZCL_LEVEL_CTRL
   zclSampleLight_LevelLastLevel = zclSampleLight_LevelCurrentLevel;
@@ -321,7 +321,7 @@ void zclSampleLight_Init( byte task_id )
 
 #ifdef ZCL_DISCOVER
   // Register the application's command list
-  zcl_registerCmdList( SAMPLELIGHT_ENDPOINT, zclCmdsArraySize, zclSampleLight_Cmds );
+  zcl_registerCmdList( SAMPLELIGHT_ENDPOINT2, zclCmdsArraySize, zclSampleLight_Cmds );
 #endif
 
   // Register for all key events - This app will handle all key events
@@ -330,12 +330,12 @@ void zclSampleLight_Init( byte task_id )
   bdb_RegisterCommissioningStatusCB( zclSampleLight_ProcessCommissioningStatus );
   
   // Register for a test endpoint
-  afRegister( &sampleLight_TestEp );
+  afRegister( &sampleLight_Ep2 );
 
 #ifdef ZCL_DIAGNOSTIC
   // Register the application's callback function to read/write attribute data.
   // This is only required when the attribute data format is unknown to ZCL.
-  zcl_registerReadWriteCB( SAMPLELIGHT_ENDPOINT, zclDiagnostic_ReadWriteAttrCB, NULL );
+  zcl_registerReadWriteCB( SAMPLELIGHT_ENDPOINT2, zclDiagnostic_ReadWriteAttrCB, NULL );
 
   if ( zclDiagnostic_InitStats() == ZSuccess )
   {
@@ -351,9 +351,9 @@ void zclSampleLight_Init( byte task_id )
   
   zdpExternalStateTaskID = zclSampleLight_TaskID;
 
-  UI_Init(zclSampleLight_TaskID, SAMPLEAPP_LCD_AUTO_UPDATE_EVT, SAMPLEAPP_KEY_AUTO_REPEAT_EVT, &zclSampleLight_IdentifyTime, APP_TITLE, &zclSampleLight_UiUpdateLcd, zclSampleLight_UiStatesMain);
+//  UI_Init(zclSampleLight_TaskID, SAMPLEAPP_LCD_AUTO_UPDATE_EVT, SAMPLEAPP_KEY_AUTO_REPEAT_EVT, &zclSampleLight_IdentifyTime, APP_TITLE, &zclSampleLight_UiUpdateLcd, zclSampleLight_UiStatesMain);
 
-  UI_UpdateLcd();
+//  UI_UpdateLcd();
 }
 
 /*********************************************************************
@@ -387,7 +387,7 @@ uint16 zclSampleLight_event_loop( uint8 task_id, uint16 events )
           break;
 
         case ZDO_STATE_CHANGE:
-          UI_DeviceStateUpdated((devStates_t)(MSGpkt->hdr.status));
+          //UI_DeviceStateUpdated((devStates_t)(MSGpkt->hdr.status));
           break;
 
         default:
@@ -420,13 +420,13 @@ uint16 zclSampleLight_event_loop( uint8 task_id, uint16 events )
 
   if ( events & SAMPLEAPP_LCD_AUTO_UPDATE_EVT )
   {
-    UI_UpdateLcd();
+    //UI_UpdateLcd();
     return ( events ^ SAMPLEAPP_LCD_AUTO_UPDATE_EVT );
   }
 
   if ( events & SAMPLEAPP_KEY_AUTO_REPEAT_EVT )
   {
-    UI_MainStateMachine(UI_KEY_AUTO_PRESSED);
+    //UI_MainStateMachine(UI_KEY_AUTO_PRESSED);
     return ( events ^ SAMPLEAPP_KEY_AUTO_REPEAT_EVT );
   }
 
@@ -451,7 +451,24 @@ uint16 zclSampleLight_event_loop( uint8 task_id, uint16 events )
  */
 static void zclSampleLight_HandleKeys( byte shift, byte keys )
 {
-  UI_MainStateMachine(keys);
+    //UI_MainStateMachine(keys);
+    if(!keys)
+        return;
+
+    if(shift | HAL_KEY_SW_1){
+        COIL1_TOGGLE();
+        LED1_TURN(COIL1_STATE() ? FALSE : TRUE );
+    }
+
+    if(shift | HAL_KEY_SW_2){
+        COIL2_TOGGLE();
+        LED2_TURN(COIL2_STATE() ? FALSE : TRUE );
+    }
+    
+    if(shift | HAL_KEY_SW_3){
+        COIL3_TOGGLE();
+        LED3_TURN(COIL3_STATE() ? FALSE : TRUE );
+    }
 }
 
 //GP_UPDATE
@@ -577,7 +594,7 @@ static void zclSampleLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t 
 #endif 
   }
   
-  UI_UpdateComissioningStatus(bdbCommissioningModeMsg);
+  //UI_UpdateComissioningStatus(bdbCommissioningModeMsg);
 }
 
 /*********************************************************************
@@ -599,7 +616,7 @@ static void zclSampleLight_BasicResetCB( void )
   zclSampleLight_UpdateLedState();
 
   // update the display
-  UI_UpdateLcd( ); 
+  //UI_UpdateLcd( ); 
 }
 
 /*********************************************************************
@@ -680,7 +697,7 @@ static void zclSampleLight_OnOffCB( uint8 cmd )
   zclSampleLight_UpdateLedState();
   
   // update the display
-  UI_UpdateLcd( );
+  //UI_UpdateLcd( );
 }
 
 #ifdef ZCL_LEVEL_CTRL
@@ -947,7 +964,7 @@ static void zclSampleLight_AdjustLightLevel( void )
   zclSampleLight_UpdateLedState();
   
   // display light level as we go
-  UI_UpdateLcd( );
+  //UI_UpdateLcd( );
 
   // keep ticking away
   if ( zclSampleLight_LevelRemainingTime )
