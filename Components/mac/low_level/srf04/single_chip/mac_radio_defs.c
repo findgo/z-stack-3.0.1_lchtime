@@ -634,8 +634,8 @@ MAC_INTERNAL_API void macRadioTurnOffPower(void)
       if (paLnaChip == PA_LNA_CC2591  ||  paLnaChip == PA_LNA_CC2590)
       {
        #if defined USER_HAL_PA_LNA_RFX2401C
-        P1DIR |= BV(0);
-        P1_0 = 0;
+        P1DIR |= BV(5);
+        P1_5 = 0;
         #endif
         /* Set direction of P1_4 to output and pulled down to prevent any leakage
          * when used to drive PA LNA		

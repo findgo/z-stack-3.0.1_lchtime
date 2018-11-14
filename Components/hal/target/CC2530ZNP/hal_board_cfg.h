@@ -61,6 +61,8 @@
  */
 #define xHAL_PA_LNA
 #define xHAL_PA_LNA_CC2590
+#define xHAL_PA_LNA_SE2431L
+#define xHAL_PA_LNA_CC2592
 
 
 /* ------------------------------------------------------------------------------------------------
@@ -101,30 +103,26 @@ extern unsigned char znpCfg0;
  * ------------------------------------------------------------------------------------------------
  */
 
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
+#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && \
+    !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_SE2431L) && \
+    !defined (HAL_PA_LNA_CC2592)
   #define HAL_NUM_LEDS            3
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)  || defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
-  #define HAL_NUM_LEDS            1
+#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) ||  \
+      defined (HAL_PA_LNA_CC2590)  || defined (HAL_PA_LNA_CC2592) || \
+      defined (HAL_PA_LNA_SE2431L)                                      /* support cc2592 se 2431L by mo */
+  #define HAL_NUM_LEDS            1   
 #else
   #error Unknown Board Indentifier
 #endif
 
 #define HAL_LED_BLINK_DELAY()   st( { volatile uint32 i; for (i=0; i<0x5800; i++) { }; } )
 
-#if !defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
 /* 1 - Green */
 #define LED1_BV           BV(0)
 #define LED1_SBIT         P1_0
 #define LED1_DDR          P1DIR
 #define LED1_POLARITY     ACTIVE_HIGH
-#else
-  /* 1 - Green */
-#define LED1_BV           BV(2)
-#define LED1_SBIT         P1_2
-#define LED1_DDR          P1DIR
-#define LED1_POLARITY     ACTIVE_HIGH
 
-#endif
 #if defined (HAL_BOARD_CC2530EB_REV17)
   /* 2 - Red */
   #define LED2_BV           BV(1)
@@ -322,7 +320,8 @@ extern unsigned char znpCfg0;
  */
 
 /* ----------- RF-frontend Connection Initialization ---------- */
-#if defined HAL_PA_LNA || defined HAL_PA_LNA_CC2590  || defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
+#if defined HAL_PA_LNA || defined HAL_PA_LNA_CC2590 || \
+    defined HAL_PA_LNA_SE2431L || defined HAL_PA_LNA_CC2592    // support cc2592 se 2431L by mo
 extern void MAC_RfFrontendSetup(void);
 #define HAL_BOARD_RF_FRONTEND_SETUP() MAC_RfFrontendSetup()
 #else
@@ -351,7 +350,9 @@ extern void MAC_RfFrontendSetup(void);
 #endif
 
 /* ----------- Board Initialization ---------- */
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
+#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && \
+    !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_SE2431L) && \
+    !defined (HAL_PA_LNA_CC2592)                                        // support cc2592 se 2431L by mo
 
 #define HAL_BOARD_INIT() st                                      \
 (                                                                \
@@ -370,8 +371,8 @@ extern void MAC_RfFrontendSetup(void);
   PREFETCH_ENABLE();                                             \
 )
 
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590) || defined (HAL_PA_LNA_CC2592) // 支持cc2592 by mo
-
+#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || \
+      defined (HAL_PA_LNA_CC2590)
 #ifdef HAL_ENABLE_WIFI_COEX_PINS
 #define HAL_BOARD_ENABLE_WIFI_COEX_PINS() st                                      \
 ( 															   \
@@ -427,6 +428,66 @@ extern void MAC_RfFrontendSetup(void);
   /* setup RF frontend if necessary */                           \
   HAL_BOARD_RF_FRONTEND_SETUP();                                 \
 )
+#elif defined (HAL_PA_LNA_CC2592) || defined (HAL_PA_LNA_SE2431L) // support cc2592 se 2431L by mo
+
+#ifdef HAL_ENABLE_WIFI_COEX_PINS
+#define HAL_BOARD_ENABLE_WIFI_COEX_PINS() st                                      \
+( 															   \
+  /* Set WIFI_TX_DISABLE control P1_6 */							\
+  P1DIR |= BV(6); 								               \
+)
+#else
+#define HAL_BOARD_ENABLE_WIFI_COEX_PINS()
+#endif
+
+#ifdef HAL_ENABLE_SPARE_PINS_AS_OUTPUTS
+#define HAL_BOARD_ENABLE_SPARE_PINS_AS_OUTPUTS() st                                      \
+( 															   \
+  /* Set SPARE_1 control P0_6 */							\
+  P0DIR |= BV(6); 								               \
+  /* Set SPARE_2 control P1_5 */							  \
+  P1DIR |= BV(5); 											 \
+)
+#else
+#define HAL_BOARD_ENABLE_SPARE_PINS_AS_OUTPUTS()
+#endif
+
+#define HAL_BOARD_INIT()                                         \
+{                                                                \
+  uint8 vOSC_32KHZ = OSC_32KHZ;                                  \
+  uint16 i;                                                      \
+                                                                 \
+  SLEEPCMD &= ~OSC_PD;                       /* turn on 16MHz RC and 32MHz XOSC */                \
+  while (!(SLEEPSTA & XOSC_STB));            /* wait for 32MHz XOSC stable */                     \
+  asm("NOP");                                /* chip bug workaround */                            \
+  for (i=0; i<504; i++) asm("NOP");          /* Require 63us delay for all revs */                \
+  CLKCONCMD = (CLKCONCMD_32MHZ | vOSC_32KHZ); /* Select 32MHz XOSC and the source for 32K clock */ \
+  while (CLKCONSTA != (CLKCONCMD_32MHZ | vOSC_32KHZ)); /* Wait for the change to be effective */   \
+  SLEEPCMD |= OSC_PD;                        /* turn off 16MHz RC */                              \
+                                                                 \
+  /* Turn on cache prefetch mode */                              \
+  PREFETCH_ENABLE();                                             \
+                                                                 \
+  /* set direction for GPIO outputs  */                          \
+  /* For SE2431L PA LNA this sets ANT_SEL to output */           \
+  /* For CC2592 this enables LNA */                              \
+  P1DIR |= BV(0);                                                \
+  /* set direction for GPIO outputs  */                          \
+  LED3_DDR |= LED3_BV;                                           \
+                                                                 \
+  /* Set PA/LNA HGM control P0_7 */                              \
+  P0DIR |= BV(7);                                                \
+                                                                 \
+  HAL_BOARD_ENABLE_WIFI_COEX_PINS();                             \
+                                                                 \
+  HAL_BOARD_ENABLE_SPARE_PINS_AS_OUTPUTS();                      \
+                                                                 \
+  /* configure tristates */                                      \
+  P0INP |= PUSH2_BV;                                             \
+                                                                 \
+  /* setup RF frontend if necessary */                           \
+  HAL_BOARD_RF_FRONTEND_SETUP();                                 \
+}
 
 #endif
 
@@ -442,8 +503,9 @@ extern void MAC_RfFrontendSetup(void);
 #define HAL_PUSH_BUTTON6()        (0)
 
 /* ----------- LED's ---------- */
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
-
+#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && \
+    !defined (HAL_PA_LNA_CC2590) && !defined (HAL_PA_LNA_SE2431L) && \
+    !defined (HAL_PA_LNA_CC2592)                                        
   #define HAL_TURN_OFF_LED1()       st( LED1_SBIT = LED1_POLARITY (0); )
   #define HAL_TURN_OFF_LED2()       st( LED2_SBIT = LED2_POLARITY (0); )
   #define HAL_TURN_OFF_LED3()       st( LED3_SBIT = LED3_POLARITY (0); )
@@ -463,9 +525,30 @@ extern void MAC_RfFrontendSetup(void);
   #define HAL_STATE_LED2()          (LED2_POLARITY (LED2_SBIT))
   #define HAL_STATE_LED3()          (LED3_POLARITY (LED3_SBIT))
   #define HAL_STATE_LED4()          HAL_STATE_LED1()
+#elif defined (HAL_PA_LNA_SE2431L) || defined (HAL_PA_LNA_CC2592)  // support cc2592 se 2431L by mo 
+// led only use led3
+  #define HAL_TURN_OFF_LED3()       st( LED3_SBIT = LED3_POLARITY (0); )
+  #define HAL_TURN_OFF_LED1()       HAL_TURN_OFF_LED3()
+  #define HAL_TURN_OFF_LED2()       HAL_TURN_OFF_LED3()
+  #define HAL_TURN_OFF_LED4()       HAL_TURN_OFF_LED3()
 
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590) || defined (HAL_PA_LNA_CC2592)// 支持cc2592 by mo
+  #define HAL_TURN_ON_LED3()        st( LED3_SBIT = LED3_POLARITY (1); )
+  #define HAL_TURN_ON_LED1()        HAL_TURN_ON_LED3()
+  #define HAL_TURN_ON_LED2()        HAL_TURN_ON_LED3()
+  #define HAL_TURN_ON_LED4()        HAL_TURN_ON_LED3()
 
+  #define HAL_TOGGLE_LED3()         st( if (LED3_SBIT) { LED3_SBIT = 0; } else { LED3_SBIT = 1;} )
+  #define HAL_TOGGLE_LED1()         HAL_TOGGLE_LED3()
+  #define HAL_TOGGLE_LED2()         HAL_TOGGLE_LED3()
+  #define HAL_TOGGLE_LED4()         HAL_TOGGLE_LED3()
+
+  #define HAL_STATE_LED3()          (LED3_POLARITY (LED3_SBIT))
+  #define HAL_STATE_LED1()          HAL_STATE_LED3()     
+  #define HAL_STATE_LED2()          HAL_STATE_LED3()
+  #define HAL_STATE_LED4()          HAL_STATE_LED3()
+
+#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || \
+      defined (HAL_PA_LNA_CC2590)
   #define HAL_TURN_OFF_LED1()       st( LED1_SBIT = LED1_POLARITY (0); )
   #define HAL_TURN_OFF_LED2()       HAL_TURN_OFF_LED1()
   #define HAL_TURN_OFF_LED3()       HAL_TURN_OFF_LED1()
