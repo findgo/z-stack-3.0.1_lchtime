@@ -53,13 +53,6 @@ extern "C"
 #include "hal_led.h"
 #include "mcoils.h"
 
-#define LED1_TURN(isblue)       HalLedSet(HAL_LED_1, ((isblue) > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
-#define LED1_BLINK()            HalLedBlink(HAL_LED_1, 1, 5, 1000)
-#define LED2_TURN(isblue)       HalLedSet(HAL_LED_2, ((isblue) > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
-#define LED2_BLINK()            HalLedBlink(HAL_LED_2, 1, 5, 1000)
-#define LED3_TURN(isblue)       HalLedSet(HAL_LED_3, ((isblue) > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
-#define LED3_BLINK()            HalLedBlink(HAL_LED_3, 1, 5, 1000)
-
 #define COIL1_TRUN(ison)        mCoilsSet(MCOILS_1, ((ison) > 0) ? MCOILS_MODE_ON : MCOILS_MODE_OFF)
 #define COIL1_TOGGLE()          mCoilsSet(MCOILS_1, MCOILS_MODE_TOGGLE)
 #define COIL1_STATE()           mCoilsGetStasus(MCOILS_1)
@@ -70,6 +63,11 @@ extern "C"
 #define COIL3_TOGGLE()          mCoilsSet(MCOILS_3, MCOILS_MODE_TOGGLE)
 #define COIL3_STATE()           mCoilsGetStasus(MCOILS_3)
 
+#define LED1_TURN()       HalLedSet(HAL_LED_1, (COIL1_STATE() > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
+#define LED2_TURN()       HalLedSet(HAL_LED_2, (COIL2_STATE() > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
+#define LED3_TURN()       HalLedSet(HAL_LED_3, (COIL3_STATE() > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
+
+#define LED_BLINK()      HalLedSet(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, HAL_LED_MODE_FLASH)
 // Added to include ZLL Target functionality
 #if defined ( BDB_TL_INITIATOR ) || defined ( BDB_TL_TARGET )
   #include "zcl_general.h"
@@ -78,7 +76,9 @@ extern "C"
 /*********************************************************************
  * CONSTANTS
  */
-#define SAMPLELIGHT_ENDPOINT2            8
+//#define SAMPLELIGHT_ENDPOINT1            20
+#define SAMPLELIGHT_ENDPOINT2            21
+//#define SAMPLELIGHT_ENDPOINT3            22
 
 #define SAMPLELIGHT_NUM_GRPS            2 // Needed to include ZLL Target functionality
   
@@ -88,13 +88,15 @@ extern "C"
 // Application Events
 #define SAMPLELIGHT_POLL_CONTROL_TIMEOUT_EVT  0x0001
 #define SAMPLELIGHT_LEVEL_CTRL_EVT            0x0002
-#define SAMPLEAPP_END_DEVICE_REJOIN_EVT       0x0004
+#define SAMPLEAPP_DEVICE_REJOIN_EVT           0x0004
+#define SAMPLEAPP_END_DEVICE_RECOVER_EVT       0x0008
 
+#define SAMPLEAPP_APP_TEST_EVT                  0x0100
 // UI Events
-#define SAMPLEAPP_LCD_AUTO_UPDATE_EVT         0x0010  
-#define SAMPLEAPP_KEY_AUTO_REPEAT_EVT         0x0020  
+//#define SAMPLEAPP_LCD_AUTO_UPDATE_EVT         0x0010  
+//#define SAMPLEAPP_KEY_AUTO_REPEAT_EVT         0x0020  
 
-#define SAMPLEAPP_END_DEVICE_REJOIN_DELAY 10000
+#define SAMPLEAPP_END_DEVICE_REJOIN_DELAY   10000  
 
 /*********************************************************************
  * MACROS
@@ -112,8 +114,9 @@ extern "C"
   extern bdbTLDeviceInfo_t tlSampleLight_DeviceInfo;
 #endif
 
-  
-extern SimpleDescriptionFormat_t zclSampleLight_SimpleDesc;
+extern SimpleDescriptionFormat_t zclSampleLight_SimpleDesc1;
+extern SimpleDescriptionFormat_t zclSampleLight_SimpleDesc2;
+extern SimpleDescriptionFormat_t zclSampleLight_SimpleDesc3;
 
 extern CONST zclCommandRec_t zclSampleLight_Cmds[];
 
@@ -138,7 +141,7 @@ extern uint8        zclSampleLight_ScenesSceneValid;
 extern CONST uint8  zclSampleLight_ScenesNameSupport;
 
 // OnOff attributes
-extern uint8  zclSampleLight_OnOff;
+extern uint8  zclSampleLight_OnOff2;
 
 // Level Control Attributes
 #ifdef ZCL_LEVEL_CTRL

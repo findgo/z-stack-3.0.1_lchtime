@@ -79,8 +79,8 @@
 #endif // BDB_TL_TARGET
 #endif // INTER_PAN
 
-#include "zcl_genericapp.h"
-
+#include "ltlApp.h"
+#include "lowNwk.h"
 /*********************************************************************
  * GLOBAL VARIABLES
  */
@@ -116,9 +116,9 @@ const pTaskEventHandlerFn tasksArr[] = {
   #if defined ( BDB_TL_TARGET )
     touchLinkTarget_event_loop,
   #endif
-  zcl_event_loop,
+  LowNwk_event_loop,
   bdb_event_loop,
-  zclGenericApp_event_loop
+  ltlApp_event_loop
 };
 
 const uint8 tasksCnt = sizeof( tasksArr ) / sizeof( tasksArr[0] );
@@ -173,9 +173,9 @@ void osalInitTasks( void )
 #if defined ( BDB_TL_TARGET )
   touchLinkTarget_Init( taskID++ );
 #endif
-  zcl_Init( taskID++ );
+  LowNwk_Init(taskID++);
   bdb_Init( taskID++ );
-  zclGenericApp_Init( taskID );
+  ltlApp_Init( taskID );
 }
 
 /*********************************************************************

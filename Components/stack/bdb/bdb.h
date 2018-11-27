@@ -56,8 +56,9 @@ extern "C"
 #include "OSAL.h"
 #include "ZGlobals.h"
 #include "AF.h"
-#include "zcl.h"
-#include "zcl_general.h"  
+//#include "zcl.h"
+//#include "zcl_general.h"  
+#include "nwk.h"
 #include "ZDProfile.h"
 
 
@@ -78,13 +79,13 @@ extern "C"
 
 //Configured per device  
 #ifndef BDB_FINDING_BINDING_CAPABILITY_ENABLED
-  #define BDB_FINDING_BINDING_CAPABILITY_ENABLED    1
+  #define BDB_FINDING_BINDING_CAPABILITY_ENABLED    0
 #endif
 #ifndef BDB_NETWORK_STEERING_CAPABILITY_ENABLED
   #define BDB_NETWORK_STEERING_CAPABILITY_ENABLED   1
 #endif
 #ifndef BDB_NETWORK_FORMATION_CAPABILITY_ENABLED
-  #define BDB_NETWORK_FORMATION_CAPABILITY_ENABLED  1
+  #define BDB_NETWORK_FORMATION_CAPABILITY_ENABLED 0
 #endif
   
 
@@ -467,7 +468,7 @@ extern void touchLinkInitiator_ResetToFNProcedure( void );
 extern void bdb_tcLinkKeyExchangeAttempt(bool didSuccess, uint8 bdbTCExchangeState);
 extern void bdb_SendMsg(uint8 taskID, uint8 toCommissioningState,uint8 status, uint8 len, uint8 *buf);
 extern void bdb_setNodeJoinLinkKeyType(uint8 KeyType);  
-extern bdbFindingBindingRespondent_t* bdb_AddRespondentNode( bdbFindingBindingRespondent_t **pHead, zclIdentifyQueryRsp_t *pCmd );
+//extern bdbFindingBindingRespondent_t* bdb_AddRespondentNode( bdbFindingBindingRespondent_t **pHead, zclIdentifyQueryRsp_t *pCmd );
 extern void bdb_CreateRespondentList( bdbFindingBindingRespondent_t **pHead );
 
 
@@ -526,7 +527,7 @@ extern void bdb_ZclIdentifyCmdInd( uint16 identifyTime, uint8 endpoint );
  *          it received an Identity Query Response Command for this 
  *          application.
  */
-extern void bdb_ZclIdentifyQueryCmdInd( zclIdentifyQueryRsp_t *pCmd );
+//extern void bdb_ZclIdentifyQueryCmdInd( zclIdentifyQueryRsp_t *pCmd );
 
 /*
  * @brief   Restore nwk parameters to invalid if the device is not on a network

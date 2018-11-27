@@ -279,7 +279,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -1437,7 +1437,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -1467,22 +1467,10 @@
                     <state>TC_LINKKEY_JOIN</state>
                     <state>NV_INIT</state>
                     <state>NV_RESTORE</state>
-                    <state>xZTOOL_P1</state>
-                    <state>xMT_TASK</state>
-                    <state>xMT_APP_FUNC</state>
-                    <state>xMT_SYS_FUNC</state>
-                    <state>xMT_ZDO_FUNC</state>
-                    <state>xMT_ZDO_MGMT</state>
-                    <state>xMT_APP_CNF_FUNC</state>
-                    <state>LEGACY_LCD_DEBUG</state>
-                    <state>LCD_SUPPORTED=DEBUG</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
-                    <state>ZCL_READ</state>
-                    <state>ZCL_WRITE</state>
-                    <state>ZCL_BASIC</state>
-                    <state>ZCL_IDENTIFY</state>
-                    <state>ZCL_SCENES</state>
-                    <state>ZCL_GROUPS</state>
+                    <state>ZAPP_P1</state>
+                    <state>GLOBAL_DEBUG</state>
+                    <state>xISR_KEYINTERRUPT</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -2468,11 +2456,11 @@
                 <option>
                     <name>Output variant</name>
                     <version>2</version>
-                    <state>6</state>
+                    <state>3</state>
                 </option>
                 <option>
                     <name>Output description</name>
-                    <state>No float, no field width, no precision.</state>
+                    <state>Full formatting.</state>
                 </option>
                 <option>
                     <name>GeneralEnableMisra</name>
@@ -2596,7 +2584,7 @@
                 </option>
                 <option>
                     <name>OGChipConfigPath</name>
-                    <state>$TOOLKIT_DIR$\config\devices\Texas Instruments\CC2530F256.i51</state>
+                    <state>C:\Program Files (x86)\IAR Systems\iar8051\8051\bin\..\config\devices\Texas Instruments\CC25xx\3x\CC2530F256.i51</state>
                 </option>
             </data>
         </settings>
@@ -2626,24 +2614,12 @@
                     <state>TC_LINKKEY_JOIN</state>
                     <state>NV_INIT</state>
                     <state>NV_RESTORE</state>
-                    <state>xPOWER_SAVING</state>
+                    <state>POWER_SAVING</state>
                     <state>NWK_AUTO_POLL</state>
-                    <state>xZTOOL_P1</state>
-                    <state>xMT_TASK</state>
-                    <state>xMT_APP_FUNC</state>
-                    <state>xMT_SYS_FUNC</state>
-                    <state>xMT_ZDO_FUNC</state>
-                    <state>xMT_ZDO_MGMT</state>
-                    <state>xMT_APP_CNF_FUNC</state>
-                    <state>LEGACY_LCD_DEBUG</state>
-                    <state>LCD_SUPPORTED=DEBUG</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
-                    <state>ZCL_READ</state>
-                    <state>ZCL_WRITE</state>
-                    <state>ZCL_BASIC</state>
-                    <state>ZCL_IDENTIFY</state>
-                    <state>ZCL_SCENES</state>
-                    <state>ZCL_GROUPS</state>
+                    <state>ZAPP_P1</state>
+                    <state>GLOBAL_DEBUG</state>
+                    <state>xISR_KEYINTERRUPT</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -2808,6 +2784,8 @@
                     <state>$PROJ_DIR$</state>
                     <state>$PROJ_DIR$\..\Source</state>
                     <state>$PROJ_DIR$\..\..\Source</state>
+                    <state>$PROJ_DIR$\..\Source\nwk</state>
+                    <state>$PROJ_DIR$\..\..\Source\ltl</state>
                     <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -3297,24 +3275,24 @@
                 </option>
                 <option>
                     <name>AllowExtraOutput</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>GenerateExtraOutput</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>XExtraOutOverride</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>ExtraOutputFile</name>
-                    <state>GenericApp.sim</state>
+                    <state>GenericApp.hex</state>
                 </option>
                 <option>
                     <name>ExtraOutputFormat</name>
                     <version>11</version>
-                    <state>60</state>
+                    <state>23</state>
                 </option>
                 <option>
                     <name>ExtraFormatVariant</name>
@@ -3480,17 +3458,56 @@
     </configuration>
     <group>
         <name>App</name>
+        <group>
+            <name>ltl</name>
+            <file>
+                <name>$PROJ_DIR$\..\..\Source\ltl\ltl.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\Source\ltl\ltl_general.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\Source\ltl\ltl_ms.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\Source\ltl\prefix.c</name>
+            </file>
+        </group>
+        <group>
+            <name>nwk</name>
+            <file>
+                <name>$PROJ_DIR$\..\Source\nwk\bxnwk.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\..\Source\memalloc.h</name>
+            </file>
+        </group>
         <file>
-            <name>$PROJ_DIR$\..\Source\OSAL_GenericApp.c</name>
+            <name>$PROJ_DIR$\..\..\Source\log.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\Source\zcl_genericapp.c</name>
+            <name>$PROJ_DIR$\..\..\Source\log.h</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\Source\zcl_genericapp.h</name>
+            <name>$PROJ_DIR$\..\Source\lowNwk.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\Source\zcl_genericapp_data.c</name>
+            <name>$PROJ_DIR$\..\Source\ltl_app_genattr.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\Source\ltlApp.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\Source\ltlApp.h</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\Source\ltlApp_data.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\Source\mcoils.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\Source\OSAL_ltlApp.c</name>
         </file>
     </group>
     <group>
@@ -3523,7 +3540,7 @@
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchlink.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchlink.h</name>
+            <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchLink.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchlink_initiator.c</name>
@@ -4081,33 +4098,63 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl.c</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl.h</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl_diagnostic.c</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl_diagnostic.h</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl_general.c</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl_general.h</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl_green_power.c</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\zcl\zcl_green_power.h</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\Source\zcl_ha.c</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\Source\zcl_ha.h</name>
+            <excluded>
+                <configuration>EndDeviceEB</configuration>
+            </excluded>
         </file>
     </group>
     <group>

@@ -118,7 +118,7 @@ uint16 zclSampleLight_IdentifyTime;
 uint8 zclSampleLight_GroupsNameSupport = 0;
 
 // On/Off Cluster attribute
-uint8  zclSampleLight_OnOff;
+uint8  zclSampleLight_OnOff2;
 
 // Level Control Cluster
 #ifdef ZCL_LEVEL_CTRL
@@ -330,7 +330,7 @@ CONST zclAttrRec_t zclSampleLight_Attrs[] =
       ATTRID_ON_OFF,
       ZCL_DATATYPE_BOOLEAN,
       ACCESS_CONTROL_READ | ACCESS_REPORTABLE,
-      (void *)&zclSampleLight_OnOff
+      (void *)&zclSampleLight_OnOff2
     }
   },
   {
@@ -773,10 +773,11 @@ const cId_t zclSampleLight_InClusterList[] =
 };
 
 #define ZCLSAMPLELIGHT_MAX_INCLUSTERS   (sizeof(zclSampleLight_InClusterList) / sizeof(zclSampleLight_InClusterList[0]))
- 
-SimpleDescriptionFormat_t zclSampleLight_SimpleDesc =
+
+#if defined(SAMPLELIGHT_ENDPOINT1)
+SimpleDescriptionFormat_t zclSampleLight_SimpleDesc1 =
 {
-  SAMPLELIGHT_ENDPOINT2,                  //  int Endpoint;
+  SAMPLELIGHT_ENDPOINT1,                  //  int Endpoint;
   ZCL_HA_PROFILE_ID,                     //  uint16 AppProfId;
 #ifdef ZCL_LEVEL_CTRL
   ZCL_HA_DEVICEID_DIMMABLE_LIGHT,        //  uint16 AppDeviceId;
@@ -790,7 +791,43 @@ SimpleDescriptionFormat_t zclSampleLight_SimpleDesc =
   0,        //  byte  AppNumInClusters;
   NULL //  byte *pAppInClusterList;
 };
-
+#endif
+#if defined(SAMPLELIGHT_ENDPOINT2)
+SimpleDescriptionFormat_t zclSampleLight_SimpleDesc2 =
+{
+  SAMPLELIGHT_ENDPOINT2,                  //  int Endpoint;
+  0xabcd,                     //  uint16 AppProfId;
+#ifdef ZCL_LEVEL_CTRL
+  ZCL_HA_DEVICEID_DIMMABLE_LIGHT,        //  uint16 AppDeviceId;
+#else
+  ZCL_HA_DEVICEID_ON_OFF_LIGHT,          //  uint16 AppDeviceId;
+#endif
+  SAMPLELIGHT_DEVICE_VERSION,            //  int   AppDevVer:4;
+  SAMPLELIGHT_FLAGS,                     //  int   AppFlags:4;
+  ZCLSAMPLELIGHT_MAX_INCLUSTERS,         //  byte  AppNumInClusters;
+  (cId_t *)zclSampleLight_InClusterList, //  byte *pAppInClusterList;
+  0,        //  byte  AppNumInClusters;
+  NULL //  byte *pAppInClusterList;
+};
+#endif
+#if defined(SAMPLELIGHT_ENDPOINT3)
+SimpleDescriptionFormat_t zclSampleLight_SimpleDesc3 =
+{
+  SAMPLELIGHT_ENDPOINT3,                  //  int Endpoint;
+  ZCL_HA_PROFILE_ID,                     //  uint16 AppProfId;
+#ifdef ZCL_LEVEL_CTRL
+  ZCL_HA_DEVICEID_DIMMABLE_LIGHT,        //  uint16 AppDeviceId;
+#else
+  ZCL_HA_DEVICEID_ON_OFF_LIGHT,          //  uint16 AppDeviceId;
+#endif
+  SAMPLELIGHT_DEVICE_VERSION,            //  int   AppDevVer:4;
+  SAMPLELIGHT_FLAGS,                     //  int   AppFlags:4;
+  ZCLSAMPLELIGHT_MAX_INCLUSTERS,         //  byte  AppNumInClusters;
+  (cId_t *)zclSampleLight_InClusterList, //  byte *pAppInClusterList;
+  0,        //  byte  AppNumInClusters;
+  NULL //  byte *pAppInClusterList;
+};
+#endif
 // Added to include ZLL Target functionality 
 #if defined ( BDB_TL_INITIATOR ) || defined ( BDB_TL_TARGET )
 bdbTLDeviceInfo_t tlSampleLight_DeviceInfo =
@@ -849,7 +886,7 @@ void zclSampleLight_ResetAttributesToDefaultValues(void)
   zclSampleLight_LevelOffTransitionTime = DEFAULT_OFF_TRANSITION_TIME;
   zclSampleLight_LevelDefaultMoveRate = DEFAULT_MOVE_RATE;
 #endif
-  zclSampleLight_OnOff = DEFAULT_ON_OFF_STATE;
+  zclSampleLight_OnOff2 = DEFAULT_ON_OFF_STATE;
   
   zclSampleLight_IdentifyTime = 0;
 }

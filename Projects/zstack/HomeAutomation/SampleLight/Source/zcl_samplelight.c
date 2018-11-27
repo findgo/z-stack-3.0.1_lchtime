@@ -110,6 +110,7 @@
 
 #include "NLMEDE.h"
 
+#include "log.h"
 // Added to include TouchLink initiator functionality 
 #if defined ( BDB_TL_INITIATOR )
   #include "bdb_touchlink_initiator.h"
@@ -151,15 +152,38 @@ uint8 zclSampleLightSeqNum;
  */
 afAddrType_t zclSampleLight_DstAddr;
 
+
+#if defined(SAMPLELIGHT_ENDPOINT1)
+static endPointDesc_t sampleLight_Ep1 =
+{
+  SAMPLELIGHT_ENDPOINT1,
+  0,
+  &zclSampleLight_TaskID,
+  (SimpleDescriptionFormat_t *)&zclSampleLight_SimpleDesc1,  // No Simple description for this test endpoint
+  (afNetworkLatencyReq_t)noLatencyReqs            // No Network Latency req
+};
+#endif
+#if defined(SAMPLELIGHT_ENDPOINT2)
 // Test Endpoint to allow SYS_APP_MSGs
 static endPointDesc_t sampleLight_Ep2 =
 {
   SAMPLELIGHT_ENDPOINT2,
   0,
   &zclSampleLight_TaskID,
-  (SimpleDescriptionFormat_t *)NULL,  // No Simple description for this test endpoint
-  (afNetworkLatencyReq_t)0            // No Network Latency req
+  (SimpleDescriptionFormat_t *)&zclSampleLight_SimpleDesc2,  // No Simple description for this test endpoint
+  (afNetworkLatencyReq_t)noLatencyReqs            // No Network Latency req
 };
+#endif
+#if defined(SAMPLELIGHT_ENDPOINT3)
+static endPointDesc_t sampleLight_Ep3 =
+{
+  SAMPLELIGHT_ENDPOINT3,
+  0,
+  &zclSampleLight_TaskID,
+  (SimpleDescriptionFormat_t *)&zclSampleLight_SimpleDesc3,  // No Simple description for this test endpoint
+  (afNetworkLatencyReq_t)noLatencyReqs            // No Network Latency req
+};
+#endif
 
 #ifdef ZCL_LEVEL_CTRL
 uint8 zclSampleLight_WithOnOff;       // set to TRUE if state machine should set light on/off
@@ -176,7 +200,7 @@ uint8 zclSampleLight_LevelLastLevel;  // to save the Current Level before the li
  */
 static void zclSampleLight_HandleKeys( byte shift, byte keys );
 static void zclSampleLight_BasicResetCB( void );
-static void zclSampleLight_OnOffCB( uint8 cmd );
+static void zclSampleLight_OnOff2CB( uint8 cmd );
 //GP_UPDATE
 #if (ZG_BUILD_RTR_TYPE)
 static void gp_CommissioningMode(bool isEntering);
@@ -214,9 +238,12 @@ static uint8 zclSampleLight_ProcessInDiscCmdsRspCmd( zclIncomingMsg_t *pInMsg );
 static uint8 zclSampleLight_ProcessInDiscAttrsRspCmd( zclIncomingMsg_t *pInMsg );
 static uint8 zclSampleLight_ProcessInDiscAttrsExtRspCmd( zclIncomingMsg_t *pInMsg );
 #endif
+// user
+static void hal_coilsInit(void);
 
-void zclSampleLight_UiActionToggleLight(uint16 keys);
-void zclSampleLight_UiUpdateLcd(uint8 uiCurrentState, char * line[3]);
+
+//void zclSampleLight_UiActionToggleLight(uint16 keys);
+//void zclSampleLight_UiUpdateLcd(uint8 uiCurrentState, char * line[3]);
 void zclSampleLight_UpdateLedState(void);
 
 /*********************************************************************
@@ -235,6 +262,7 @@ void zclSampleLight_UpdateLedState(void);
 /*********************************************************************
  * STATUS STRINGS
  */
+/*
 #ifdef LCD_SUPPORTED
   const char sLightOn[]      = "   LIGHT ON     ";
   const char sLightOff[]     = "   LIGHT OFF    ";
@@ -242,7 +270,7 @@ void zclSampleLight_UpdateLedState(void);
     char sLightLevel[]        = "   LEVEL ###    "; // displays level 1-254
   #endif
 #endif
-
+*/
 /*********************************************************************
  * REFERENCED EXTERNALS
  */
@@ -255,7 +283,7 @@ static zclGeneral_AppCallbacks_t zclSampleLight_CmdCallbacks =
 {
   zclSampleLight_BasicResetCB,            // Basic Cluster Reset command
   NULL,                                   // Identify Trigger Effect command
-  zclSampleLight_OnOffCB,                 // On/Off cluster commands
+  zclSampleLight_OnOff2CB,                 // On/Off cluster commands
   NULL,                                   // On/Off cluster enhanced command Off with Effect
   NULL,                                   // On/Off cluster enhanced command On with Recall Global Scene
   NULL,                                   // On/Off cluster enhanced command On with Timed Off
@@ -297,20 +325,34 @@ void zclSampleLight_Init( byte task_id )
 {
   zclSampleLight_TaskID = task_id;
 
+  log_Init();
+  log_infoln("reason: %x",ResetReason());
+  log_infoln("app init!");
+
   // Set destination address to indirect
-  zclSampleLight_DstAddr.addrMode = (afAddrMode_t)AddrNotPresent;
-  zclSampleLight_DstAddr.endPoint = 0;
-  zclSampleLight_DstAddr.addr.shortAddr = 0;
+  zclSampleLight_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
+  zclSampleLight_DstAddr.endPoint = 0xaa;
+  zclSampleLight_DstAddr.addr.shortAddr = 0x0000;
+  
+    // Register the Simple Descriptor for this application
+#if defined(SAMPLELIGHT_ENDPOINT1)
+    bdb_RegisterSimpleDescriptor( &zclSampleLight_SimpleDesc1 );
+#endif
 
-  // Register the Simple Descriptor for this application
-  bdb_RegisterSimpleDescriptor( &zclSampleLight_SimpleDesc );
-
+#if defined(SAMPLELIGHT_ENDPOINT2)
+  bdb_RegisterSimpleDescriptor( &zclSampleLight_SimpleDesc2 );
   // Register the ZCL General Cluster Library callback functions
   zclGeneral_RegisterCmdCallbacks( SAMPLELIGHT_ENDPOINT2, &zclSampleLight_CmdCallbacks );
-
+  
   // Register the application's attribute list
   zclSampleLight_ResetAttributesToDefaultValues();
   zcl_registerAttrList( SAMPLELIGHT_ENDPOINT2, zclSampleLight_NumAttributes, zclSampleLight_Attrs );
+#endif
+
+#if defined(SAMPLELIGHT_ENDPOINT3)
+    bdb_RegisterSimpleDescriptor( &zclSampleLight_SimpleDesc3 );
+#endif
+
 
 #ifdef ZCL_LEVEL_CTRL
   zclSampleLight_LevelLastLevel = zclSampleLight_LevelCurrentLevel;
@@ -323,15 +365,18 @@ void zclSampleLight_Init( byte task_id )
   // Register the application's command list
   zcl_registerCmdList( SAMPLELIGHT_ENDPOINT2, zclCmdsArraySize, zclSampleLight_Cmds );
 #endif
-
   // Register for all key events - This app will handle all key events
   RegisterForKeys( zclSampleLight_TaskID );
-  
+
   bdb_RegisterCommissioningStatusCB( zclSampleLight_ProcessCommissioningStatus );
-  
+
+
+#if defined(SAMPLELIGHT_ENDPOINT1)
+
+#endif
+#if defined(SAMPLELIGHT_ENDPOINT2)
   // Register for a test endpoint
   afRegister( &sampleLight_Ep2 );
-
 #ifdef ZCL_DIAGNOSTIC
   // Register the application's callback function to read/write attribute data.
   // This is only required when the attribute data format is unknown to ZCL.
@@ -342,18 +387,26 @@ void zclSampleLight_Init( byte task_id )
     // Here the user could start the timer to save Diagnostics to NV
   }
 #endif
-  
+#endif
+#if defined(SAMPLELIGHT_ENDPOINT3)
+
+#endif
+
 //GP_UPDATE  
 #if (ZG_BUILD_RTR_TYPE)  
   gp_RegisterCommissioningModeCB(gp_CommissioningMode);
   gp_RegisterGPChangeChannelReqCB(gp_ChangeChannelReq);
 #endif
-  
+
   zdpExternalStateTaskID = zclSampleLight_TaskID;
 
 //  UI_Init(zclSampleLight_TaskID, SAMPLEAPP_LCD_AUTO_UPDATE_EVT, SAMPLEAPP_KEY_AUTO_REPEAT_EVT, &zclSampleLight_IdentifyTime, APP_TITLE, &zclSampleLight_UiUpdateLcd, zclSampleLight_UiStatesMain);
-
 //  UI_UpdateLcd();
+
+    osal_set_event( task_id, SAMPLEAPP_DEVICE_REJOIN_EVT);  // start device join nwk
+    LED_BLINK();
+    hal_coilsInit();
+    log_infoln("app started");
 }
 
 /*********************************************************************
@@ -387,6 +440,7 @@ uint16 zclSampleLight_event_loop( uint8 task_id, uint16 events )
           break;
 
         case ZDO_STATE_CHANGE:
+            log_alertln("zdo state change: %d", (devStates_t)(MSGpkt->hdr.status));
           //UI_DeviceStateUpdated((devStates_t)(MSGpkt->hdr.status));
           break;
 
@@ -410,25 +464,61 @@ uint16 zclSampleLight_event_loop( uint8 task_id, uint16 events )
   }
 #endif
 
-#if ZG_BUILD_ENDDEVICE_TYPE    
-  if ( events & SAMPLEAPP_END_DEVICE_REJOIN_EVT )
+//  if ( events & SAMPLEAPP_LCD_AUTO_UPDATE_EVT )
+//  {
+//    UI_UpdateLcd();
+//    return ( events ^ SAMPLEAPP_LCD_AUTO_UPDATE_EVT );
+//  }
+
+//  if ( events & SAMPLEAPP_KEY_AUTO_REPEAT_EVT )
+//  {
+//    UI_MainStateMachine(UI_KEY_AUTO_PRESSED);
+//    return ( events ^ SAMPLEAPP_KEY_AUTO_REPEAT_EVT );
+//  }
+  if(events & SAMPLEAPP_DEVICE_REJOIN_EVT)
   {
-    bdb_ZedAttemptRecoverNwk();
-    return ( events ^ SAMPLEAPP_END_DEVICE_REJOIN_EVT );
+  
+    log_alertln("attempt rejoin nwk!");
+    
+    bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
+    return ( events ^ SAMPLEAPP_DEVICE_REJOIN_EVT );
+  }
+#if ZG_BUILD_ENDDEVICE_TYPE
+  if(events & SAMPLEAPP_END_DEVICE_RECOVER_EVT)
+  {
+    log_alertln("zed attempt recover nwk!");
+    if(devState == DEV_NWK_ORPHAN)
+        bdb_ZedAttemptRecoverNwk();
+    else
+        bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
+    return ( events ^ SAMPLEAPP_END_DEVICE_RECOVER_EVT );
   }
 #endif
 
-  if ( events & SAMPLEAPP_LCD_AUTO_UPDATE_EVT )
+  if ( events & SAMPLEAPP_APP_TEST_EVT )
   {
-    //UI_UpdateLcd();
-    return ( events ^ SAMPLEAPP_LCD_AUTO_UPDATE_EVT );
-  }
+    zclReportCmd_t * reportCmd;
+    zclAttrRec_t attrRec;
+    if(bdbAttributes.bdbNodeIsOnANetwork){
+        if(zclFindAttrRec(sampleLight_Ep2.endPoint, ZCL_CLUSTER_ID_GEN_ON_OFF, ATTRID_ON_OFF,&attrRec)){
+            reportCmd = zcl_mem_alloc(sizeof(zclReportCmd_t) + sizeof(zclReport_t) * 1);
+            if(reportCmd){
+                reportCmd->numAttr = 1;
+                reportCmd->attrList[0].attrID = attrRec.attr.attrId;
+                reportCmd->attrList[0].dataType = attrRec.attr.dataType;
+                reportCmd->attrList[0].attrData = attrRec.attr.dataPtr;
+                zcl_SendReportCmd(sampleLight_Ep2.endPoint, &zclSampleLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF,
+                    reportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, true, 0x00);
+        
+                zcl_mem_free(reportCmd);
+            }
+        }
+    }
+    osal_start_timerEx(task_id, SAMPLEAPP_APP_TEST_EVT, 2000);
 
-  if ( events & SAMPLEAPP_KEY_AUTO_REPEAT_EVT )
-  {
-    //UI_MainStateMachine(UI_KEY_AUTO_PRESSED);
-    return ( events ^ SAMPLEAPP_KEY_AUTO_REPEAT_EVT );
+    return ( events ^ SAMPLEAPP_APP_TEST_EVT );
   }
+  
 
   // Discard unknown events
   return 0;
@@ -452,23 +542,79 @@ uint16 zclSampleLight_event_loop( uint8 task_id, uint16 events )
 static void zclSampleLight_HandleKeys( byte shift, byte keys )
 {
     //UI_MainStateMachine(keys);
+    zclReportCmd_t * reportCmd;
+    zclAttrRec_t attrRec;
+
+    log_debugln("handle key!");
+    
     if(!keys)
         return;
-
+    
+#ifdef  SAMPLELIGHT_ENDPOINT1
     if(shift | HAL_KEY_SW_1){
         COIL1_TOGGLE();
-        LED1_TURN(COIL1_STATE() ? FALSE : TRUE );
-    }
+        LED1_TURN();
+        log_infoln("key1 toggle!");
+        if(zclFindAttrRec(sampleLight_Ep1.endPoint, ZCL_CLUSTER_ID_GEN_ON_OFF, ATTRID_ON_OFF,&attrRec)){
+            reportCmd = zcl_mem_alloc(sizeof(zclReportCmd_t) + sizeof(zclReport_t) * 1);
+            if(reportCmd){
+                reportCmd->numAttr = 1;
+                reportCmd->attrList[0].attrID = attrRec.attr.attrId;
+                reportCmd->attrList[0].dataType = attrRec.attr.dataType;
+                reportCmd->attrList[0].attrData = attrRec.attr.dataPtr;
+                zcl_SendReportCmd(sampleLight_Ep1.endPoint, &zclSampleLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF,
+                    reportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, true, 0x00);
 
+                zcl_mem_free(reportCmd);
+            }
+        }
+    }
+#endif
+
+#ifdef  SAMPLELIGHT_ENDPOINT2
     if(shift | HAL_KEY_SW_2){
         COIL2_TOGGLE();
-        LED2_TURN(COIL2_STATE() ? FALSE : TRUE );
+        LED2_TURN();
+        log_debugln("key2 toggle!");
+
+        if(zclFindAttrRec(sampleLight_Ep2.endPoint, ZCL_CLUSTER_ID_GEN_ON_OFF, ATTRID_ON_OFF,&attrRec)){
+            reportCmd = zcl_mem_alloc(sizeof(zclReportCmd_t) + sizeof(zclReport_t) * 1);
+            if(reportCmd){
+                reportCmd->numAttr = 1;
+                reportCmd->attrList[0].attrID = attrRec.attr.attrId;
+                reportCmd->attrList[0].dataType = attrRec.attr.dataType;
+                reportCmd->attrList[0].attrData = attrRec.attr.dataPtr;
+                zcl_SendReportCmd(sampleLight_Ep2.endPoint, &zclSampleLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF,
+                    reportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, true, 0x00);
+
+                zcl_mem_free(reportCmd);
+            }
+        }
     }
-    
+#endif
+
+#ifdef  SAMPLELIGHT_ENDPOINT3
     if(shift | HAL_KEY_SW_3){
         COIL3_TOGGLE();
-        LED3_TURN(COIL3_STATE() ? FALSE : TRUE );
+        LED3_TURN();
+        log_infoln("key3 toggle!");        
+        
+        if(zclFindAttrRec(sampleLight_Ep3.endPoint, ZCL_CLUSTER_ID_GEN_ON_OFF, ATTRID_ON_OFF,&attrRec)){
+            reportCmd = zcl_mem_alloc(sizeof(zclReportCmd_t) + sizeof(zclReport_t) * 1);
+            if(reportCmd){
+                reportCmd->numAttr = 1;
+                reportCmd->attrList[0].attrID = attrRec.attr.attrId;
+                reportCmd->attrList[0].dataType = attrRec.attr.dataType;
+                reportCmd->attrList[0].attrData = attrRec.attr.dataPtr;
+                zcl_SendReportCmd(sampleLight_Ep3.endPoint, &zclSampleLight_DstAddr, ZCL_CLUSTER_ID_GEN_ON_OFF,
+                    reportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, true, 0x00);
+
+                zcl_mem_free(reportCmd);
+            }
+        }
     }
+#endif
+
 }
 
 //GP_UPDATE
@@ -534,14 +680,16 @@ static void zclSampleLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t 
 {
   switch(bdbCommissioningModeMsg->bdbCommissioningMode)
   {
-    case BDB_COMMISSIONING_FORMATION:
+    case BDB_COMMISSIONING_FORMATION: // only coor
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS)
       {
+        log_debugln("bdb process nwk formation success!");
         //After formation, perform nwk steering again plus the remaining commissioning modes that has not been process yet
         bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING | bdbCommissioningModeMsg->bdbRemainingCommissioningModes);
       }
       else
       {
+        log_debugln("bdb process nwk formation failed!");
         //Want to try other channels?
         //try with bdb_setChannelAttribute
       }
@@ -551,6 +699,14 @@ static void zclSampleLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t 
       {
         //YOUR JOB:
         //We are on the nwk, what now?
+        // show on net
+        LED1_TURN();
+        LED2_TURN();
+        LED3_TURN();
+        log_debugln("bdb process nwk success,and on nwk!");
+        
+        osal_stop_timerEx( zclSampleLight_TaskID, LTLAPP_DEVICE_REJOIN_EVT);
+        osal_set_event(zclSampleLight_TaskID, SAMPLEAPP_APP_TEST_EVT);
       }
       else
       {
@@ -558,20 +714,26 @@ static void zclSampleLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t 
         //No suitable networks found
         //Want to try other channels?
         //try with bdb_setChannelAttribute
+        // try again??
+        log_debugln("bdb process nwk failed,rejoin after a monment!");
+        osal_start_timerEx( zclSampleLight_TaskID, SAMPLEAPP_DEVICE_REJOIN_EVT, SAMPLEAPP_END_DEVICE_REJOIN_DELAY);
       }
     break;
     case BDB_COMMISSIONING_FINDING_BINDING:
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_SUCCESS)
-      {
+      {   
+        log_debugln("bdb process find and binding success!");
         //YOUR JOB:
       }
       else
       {
+        log_debugln("bdb process find and binding failed!");
         //YOUR JOB:
         //retry?, wait for user interaction?
       }
     break;
     case BDB_COMMISSIONING_INITIALIZATION:
+      log_debugln("bdb process Initialization!");
       //Initialization notification can only be successful. Failure on initialization 
       //only happens for ZED and is notified as BDB_COMMISSIONING_PARENT_LOST notification
       
@@ -583,12 +745,16 @@ static void zclSampleLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t 
     case BDB_COMMISSIONING_PARENT_LOST:
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED)
       {
+        log_debugln("bdb process recover from losing parent!");
+        
+        osal_stop_timerEx( zclSampleLight_TaskID, SAMPLEAPP_END_DEVICE_RECOVER_EVT);
         //We did recover from losing parent
       }
       else
-      {
+      {      
+        log_debugln("bdb process parent not found,and rejoin a nwk!");
         //Parent not found, attempt to rejoin again after a fixed delay
-        osal_start_timerEx(zclSampleLight_TaskID, SAMPLEAPP_END_DEVICE_REJOIN_EVT, SAMPLEAPP_END_DEVICE_REJOIN_DELAY);
+        osal_start_timerEx(zclSampleLight_TaskID, SAMPLEAPP_END_DEVICE_RECOVER_EVT, SAMPLEAPP_END_DEVICE_REJOIN_DELAY);
       }
     break;
 #endif 
@@ -610,7 +776,8 @@ static void zclSampleLight_ProcessCommissioningStatus(bdbCommissioningModeMsg_t 
 static void zclSampleLight_BasicResetCB( void )
 {
   //Reset every attribute in all supported cluster to their default value.
-
+  log_debugln("zcl Basic reset!");
+  
   zclSampleLight_ResetAttributesToDefaultValues();
 
   zclSampleLight_UpdateLedState();
@@ -620,7 +787,7 @@ static void zclSampleLight_BasicResetCB( void )
 }
 
 /*********************************************************************
- * @fn      zclSampleLight_OnOffCB
+ * @fn      zclSampleLight_OnOff2CB
  *
  * @brief   Callback from the ZCL General Cluster Library when
  *          it received an On/Off Command for this application.
@@ -629,14 +796,15 @@ static void zclSampleLight_BasicResetCB( void )
  *
  * @return  none
  */
-static void zclSampleLight_OnOffCB( uint8 cmd )
+static void zclSampleLight_OnOff2CB( uint8 cmd )
 {
   afIncomingMSGPacket_t *pPtr = zcl_getRawAFMsg();
 
   uint8 OnOff;
 
+  log_debugln("zcl onoff!");
+  
   zclSampleLight_DstAddr.addr.shortAddr = pPtr->srcAddr.addr.shortAddr;
-
 
   // Turn on the light
   if ( cmd == COMMAND_ON )
@@ -665,7 +833,7 @@ static void zclSampleLight_OnOffCB( uint8 cmd )
     }
     else
     {
-      if (zclSampleLight_OnOff == LIGHT_ON)
+      if (zclSampleLight_OnOff2 == LIGHT_ON)
       {
         OnOff = LIGHT_OFF;
       }
@@ -675,7 +843,7 @@ static void zclSampleLight_OnOffCB( uint8 cmd )
       }
     }
 #else
-    if (zclSampleLight_OnOff == LIGHT_ON)
+    if (zclSampleLight_OnOff2 == LIGHT_ON)
     {
       OnOff = LIGHT_OFF;
     }
@@ -691,7 +859,7 @@ static void zclSampleLight_OnOffCB( uint8 cmd )
 
   zclSampleLight_DefaultMove(OnOff);
 #else
-  zclSampleLight_OnOff = OnOff;
+  zclSampleLight_OnOff2 = OnOff;
 #endif
 
   zclSampleLight_UpdateLedState();
@@ -836,7 +1004,7 @@ static uint16 zclSampleLight_GetTime( uint8 newLevel, uint16 time )
  *
  * @brief   We were turned on/off. Use default time to move to on or off.
  *
- * @param   zclSampleLight_OnOff - must be set prior to calling this function.
+ * @param   zclSampleLight_OnOff2 - must be set prior to calling this function.
  *
  * @return  none
  */
@@ -849,7 +1017,7 @@ static void zclSampleLight_DefaultMove( uint8 OnOff )
   // if moving to on position, move to on level
   if ( OnOff )
   {
-    if (zclSampleLight_OnOff == LIGHT_OFF)
+    if (zclSampleLight_OnOff2 == LIGHT_OFF)
     {
       zclSampleLight_LevelCurrentLevel = ATTR_LEVEL_MIN_LEVEL;
     }
@@ -941,17 +1109,17 @@ static void zclSampleLight_AdjustLightLevel( void )
   {
     if ( zclSampleLight_LevelCurrentLevel > ATTR_LEVEL_MIN_LEVEL )
     {
-      zclSampleLight_OnOff = LIGHT_ON;
+      zclSampleLight_OnOff2 = LIGHT_ON;
     }
     else
     {
       if (zclSampleLight_LevelChangeCmd != LEVEL_CHANGED_BY_ON_CMD)
       {
-        zclSampleLight_OnOff = LIGHT_OFF;
+        zclSampleLight_OnOff2 = LIGHT_OFF;
       }
       else
       {
-        zclSampleLight_OnOff = LIGHT_ON;
+        zclSampleLight_OnOff2 = LIGHT_ON;
       }
       
       if (( zclSampleLight_LevelChangeCmd != LEVEL_CHANGED_BY_LEVEL_CMD ) && ( zclSampleLight_LevelOnLevel == ATTR_LEVEL_ON_LEVEL_NO_EFFECT ))
@@ -1296,15 +1464,16 @@ static uint8 zclSampleLight_ProcessInDiscAttrsExtRspCmd( zclIncomingMsg_t *pInMs
 }
 #endif // ZCL_DISCOVER
 
-void zclSampleLight_UiActionToggleLight(uint16 keys)
-{
-  zclSampleLight_OnOffCB(COMMAND_TOGGLE);
-}
+//void zclSampleLight_UiActionToggleLight(uint16 keys)
+//{
+//  zclSampleLight_OnOff2CB(COMMAND_TOGGLE);
+//}
 
 void zclSampleLight_UpdateLedState(void)
 {
   // set the LED1 based on light (on or off)
-  if ( zclSampleLight_OnOff == LIGHT_ON )
+  /*
+  if ( zclSampleLight_OnOff2 == LIGHT_ON )
   {
     HalLedSet ( UI_LED_APP, HAL_LED_MODE_ON );
   }
@@ -1312,8 +1481,23 @@ void zclSampleLight_UpdateLedState(void)
   {
     HalLedSet ( UI_LED_APP, HAL_LED_MODE_OFF );
   }
+#ifdef  SAMPLELIGHT_ENDPOINT1
+  COIL1_TRUN(zclSampleLight_OnOff2 == LIGHT_ON);
+#endif
+#ifdef  SAMPLELIGHT_ENDPOINT3
+  COIL3_TRUN(zclSampleLight_OnOff2 == LIGHT_ON);
+#endif
+  */
+
+#ifdef  SAMPLELIGHT_ENDPOINT2
+  COIL2_TRUN(zclSampleLight_OnOff2 == LIGHT_ON);
+  LED2_TURN();
+#endif
+
+  log_noticeln("led2 update : %d!",zclSampleLight_OnOff2);
 }
 
+/*
 void zclSampleLight_UiUpdateLcd(uint8 UiState, char * line[3])
 {
 #ifdef LCD_SUPPORTED
@@ -1321,12 +1505,24 @@ void zclSampleLight_UiUpdateLcd(uint8 UiState, char * line[3])
   zclHA_uint8toa( zclSampleLight_LevelCurrentLevel, &sLightLevel[9] );
   line[0] = (char *)sLightLevel;
 #endif // ZCL_LEVEL_CTRL
-  line[1] = (char *)(zclSampleLight_OnOff ? sLightOn : sLightOff);
+  line[1] = (char *)(zclSampleLight_OnOff2 ? sLightOn : sLightOff);
   line[2] = "< TOGGLE LIGHT >";
 #endif
 }
-
+*/
 /****************************************************************************
 ****************************************************************************/
 
+// user 
 
+static void hal_coilsInit(void)
+{
+// init coils pin
+    COIL1_DDR |= COIL1_BV;
+    COIL2_DDR |= COIL2_BV;    
+    COIL3_DDR |= COIL3_BV;
+//    MCU_IO_DIR_OUTPUT(0, 6);
+//    MCU_IO_DIR_OUTPUT(1, 2);
+//    MCU_IO_DIR_OUTPUT(1, 3);
+    mCoilsInit();
+}

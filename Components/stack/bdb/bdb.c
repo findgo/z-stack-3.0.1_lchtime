@@ -81,7 +81,9 @@
 #ifdef MT_APP_CNF_FUNC
 #include "MT_APP_CONFIG.h"
 #endif
-   
+ 
+#include "lownwk.h"
+
  /*********************************************************************
  * MACROS
  */
@@ -302,7 +304,8 @@ void bdb_RegisterSimpleDescriptor( SimpleDescriptionFormat_t *simpleDesc )
   {
     // Fill out the endpoint description.
     epDesc->endPoint = simpleDesc->EndPoint;
-    epDesc->task_id = &zcl_TaskID;   // all messages get sent to ZCL first
+    //epDesc->task_id = &zcl_TaskID;   // all messages get sent to ZCL first
+    epDesc->task_id = &LowNwk_TaskID;   // all messages get sent to nwk first
     epDesc->simpleDesc = simpleDesc;
     epDesc->latencyReq = noLatencyReqs;
 
@@ -2904,6 +2907,7 @@ void bdb_CreateRespondentList( bdbFindingBindingRespondent_t **pHead )
  *
  * @return  pointer to new node
  */
+/*
 bdbFindingBindingRespondent_t* bdb_AddRespondentNode( bdbFindingBindingRespondent_t **pHead, zclIdentifyQueryRsp_t *pCmd )
 {
   bdbFindingBindingRespondent_t **pCurr;
@@ -2957,7 +2961,7 @@ bdbFindingBindingRespondent_t* bdb_AddRespondentNode( bdbFindingBindingResponden
   
   return *pCurr;
 }
-
+*/
 /*********************************************************************
  * @fn      bdb_zclRespondentListClean
  *

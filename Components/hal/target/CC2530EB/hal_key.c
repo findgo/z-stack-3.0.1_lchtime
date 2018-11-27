@@ -89,6 +89,8 @@
 #include "hal_key.h"
 #include "osal.h"
 
+#include "log.h"
+
 #if (defined HAL_KEY) && (HAL_KEY == TRUE)
 
 /**************************************************************************************************
@@ -242,9 +244,19 @@ void HalKeyInit( void )
   HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
   HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
 #else
-  HAL_KEY_SW_1_SEL &= ~(HAL_KEY_SW_1_BIT);    /* Set pin function to GPIO */
-  HAL_KEY_SW_2_SEL &= ~(HAL_KEY_SW_2_BIT);    /* Set pin function to GPIO */
-  HAL_KEY_SW_3_SEL &= ~(HAL_KEY_SW_3_BIT);    /* Set pin function to GPIO */
+//  HAL_KEY_SW_1_SEL &= ~(HAL_KEY_SW_1_BIT);    /* Set pin function to GPIO */
+//  HAL_KEY_SW_1_DIR &= ~(HAL_KEY_SW_1_BIT);    /* Set pin direction to Input */
+//  HAL_KEY_SW_2_SEL &= ~(HAL_KEY_SW_2_BIT);    /* Set pin function to GPIO */
+//  HAL_KEY_SW_2_DIR &= ~(HAL_KEY_SW_2_BIT);    /* Set pin direction to Input */
+//  HAL_KEY_SW_3_SEL &= ~(HAL_KEY_SW_3_BIT);    /* Set pin function to GPIO */
+//  HAL_KEY_SW_3_DIR &= ~(HAL_KEY_SW_3_BIT);    /* Set pin direction to Input */
+//  P0INP &= ~(HAL_KEY_SW_1_BIT);
+//  P0INP &= ~(HAL_KEY_SW_2_BIT);
+//  P0INP &= ~(HAL_KEY_SW_3_BIT);
+  
+  MCU_IO_INPUT_PREP(0,0,MCU_IO_PULLUP); // 配置成输入,并且是上拉
+  MCU_IO_INPUT_PREP(0,1,MCU_IO_PULLUP);
+  MCU_IO_INPUT_PREP(0,2,MCU_IO_PULLUP);
 #endif
 
   /* Initialize callback function */
@@ -415,6 +427,7 @@ void HalKeyPoll (void)
     keys = halGetJoyKeyInput();
   }
 #endif
+
   /* If interrupts are not enabled, previous key status and current key status
    * are compared to find out if a key has changed status.
    */

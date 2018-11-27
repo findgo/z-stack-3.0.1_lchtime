@@ -289,7 +289,7 @@
 #define PUSH1_SBIT        P0_0
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
-  #define PUSH1_POLARITY    ACTIVE_HIGH
+  #define PUSH1_POLARITY    ACTIVE_LOW//ACTIVE_HIGH
 #elif defined (HAL_BOARD_CC2530EB_REV13)
   #define PUSH1_POLARITY    ACTIVE_LOW
 #else
@@ -303,11 +303,11 @@
 // S2 add by mo 20181114
 #define PUSH2_BV          BV(1)
 #define PUSH2_SBIT        P0_1
-#define PUSH2_POLARITY    ACTIVE_HIGH
+#define PUSH2_POLARITY    ACTIVE_LOW
 // S3 add by mo 20181114
 #define PUSH3_BV          BV(2)
 #define PUSH3_SBIT        P0_2
-#define PUSH3_POLARITY    ACTIVE_HIGH
+#define PUSH3_POLARITY    ACTIVE_LOW
 
 
 /* ------------------------------------------------------------------------------------------------
@@ -423,7 +423,7 @@ extern void MAC_RfFrontendSetup(void);
   LED4_SET_DIR();                                                \
                                                                  \
   /* configure tristates */                                      \
-  P0INP |= PUSH2_BV;                                             \
+  /*P0INP |= PUSH2_BV;  */                                           \
 }
 
 #elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || \
@@ -674,7 +674,7 @@ st( \
 
 /* Set to TRUE enable LCD usage, FALSE disable it */
 #ifndef HAL_LCD
-#define HAL_LCD TRUE
+#define HAL_LCD FALSE
 #endif
 
 /* Set to TRUE enable LED usage, FALSE disable it */

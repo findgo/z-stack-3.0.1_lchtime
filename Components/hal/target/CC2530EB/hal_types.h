@@ -59,7 +59,7 @@ typedef unsigned char   bool;
 
 typedef uint8           halDataAlign_t;
 
-// add by mo
+// add by mo 201127
 typedef signed   char   int8_t;
 typedef unsigned char   uint8_t;
 

@@ -3,6 +3,22 @@
 zigbee for lchtime 
 mesh 
 
+// 硬件说明
+P00 - K1 
+P01 - K2
+P02 - K3
+
+P03 - LED1
+P04 - LED2
+P05 - LED5
+
+P06 - COIL0
+P12 - COIL1
+P13 - COIL2
+
+仅调试使用
+P1.4 - TX
+P1.5 - RX  
 
 /* 一些说明 */ 
 

@@ -866,6 +866,7 @@ void bdb_RegisterBindNotificationCB( bdbGCB_BindNotification_t pfnBindNotificati
  *
  * @return  ZStatus_t
  */
+
 ZStatus_t bdb_SendIdentifyQuery( uint8 endpoint )
 {
   afAddrType_t dstAddr;
