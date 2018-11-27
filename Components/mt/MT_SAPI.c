@@ -747,7 +747,9 @@ static void MT_SapiStartNwk(uint8* pBuf)
 
   // 如果是终端,并失去父节点,偿试恢复网络
   if((devState == DEV_NWK_ORPHAN) &&  (logicaltype == ZG_DEVICETYPE_ENDDEVICE)){ 
+#if ( ZSTACK_DEVICE_BUILD == DEVICE_BUILD_ENDDEVICE )
     bdb_ZedAttemptRecoverNwk();
+#endif
   }
   else{
     bdb_StartCommissioning(*pBuf);
