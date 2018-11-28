@@ -55,6 +55,7 @@ byte ltlApp_TaskID;
 
 devStates_t ltlApp_NwkState = DEV_INIT;
 
+uint8_t ltlApp_OnNet = FALSE;
 /*********************************************************************
  * LOCAL VARIABLES
  */
@@ -140,7 +141,6 @@ void ltlApp_Init( byte task_id )
     ltl_GeneralBasicAttriInit();
     
     // Register the application's attribute list
-    //zclSampleLight_ResetAttributesToDefaultValues();
         
     // Register the Application to receive the unprocessed Foundation command/response messages
     LowNwk_registerForMsg( ltlApp_TaskID );
@@ -151,13 +151,13 @@ void ltlApp_Init( byte task_id )
     bdb_RegisterCommissioningStatusCB( ltlApp_ProcessCommissioningStatus );
 
     osal_set_event( task_id, LTLAPP_DEVICE_REJOIN_EVT);  // start device join nwk
-    HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 50, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
+    HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
     hal_coilsInit();
     log_infoln("app started");
-    //ZDO_RegisterForZdoCB(ZDO_LEAVE_IND_CBID, &ltlApp_ZdoLeaveInd);
+    ZDO_RegisterForZdoCB(ZDO_LEAVE_IND_CBID, &ltlApp_ZdoLeaveInd);
 
 #if defined(GLOBAL_DEBUG)
-    //osal_set_event(ltlApp_TaskID, LTLAPP_TEST_EVT);
+    osal_set_event(ltlApp_TaskID, LTLAPP_TEST_EVT);
 #endif
 }
 
@@ -234,6 +234,16 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
     return ( events ^ LTLAPP_DEVICE_RECOVER_EVT );
   }
 #endif
+  if(events & LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT)
+  {
+    log_alertln("app reset nwk option");
+    
+    //Set the device as factory new
+    zgWriteStartupOptions(ZG_STARTUP_SET, ZCD_STARTOPT_DEFAULT_CONFIG_STATE | ZCD_STARTOPT_DEFAULT_NETWORK_STATE);
+    SystemResetSoft();
+    
+    return ( events ^ LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT );
+  }
 #if defined(GLOBAL_DEBUG)
   if(events & LTLAPP_TEST_EVT)
   {
@@ -280,7 +290,7 @@ if ( keys & HAL_KEY_SW_2 ){
     }
 #endif
     if ( keys & HAL_KEY_SW_4 ){
-        //Meter_Leave();
+        Meter_Leave();
     }
   
 }
@@ -329,7 +339,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         LED3_TURN(COIL3_STATE());
 #endif
         log_debugln("bdb process nwk success,and on nwk!");
-        
+        ltlApp_OnNet = TRUE;
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT);
       }
       else
@@ -339,6 +349,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         //Want to try other channels?
         //try with bdb_setChannelAttribute
         // try again??
+        ltlApp_OnNet = FALSE;
         log_debugln("bdb process nwk failed(%d),rejoin after a monment!",bdbCommissioningModeMsg->bdbCommissioningStatus);
         osal_start_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
       }
@@ -371,12 +382,14 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED)
       {
         log_debugln("bdb process recover from losing parent!");
+        ltlApp_OnNet = TRUE;
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT);
         //We did recover from losing parent
       }
       else
       {      
-        log_debugln("bdb process parent not found,and rejoin a nwk!");
+        log_debugln("bdb process parent not found,and rejoin a nwk!");        
+        ltlApp_OnNet = FALSE;
         //Parent not found, attempt to rejoin again after a fixed delay
         osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
       }
@@ -389,8 +402,12 @@ static void *ltlApp_ZdoLeaveInd(void *vPtr)
 {
   NLME_LeaveInd_t *pInd = (NLME_LeaveInd_t *)vPtr;
 
-  log_alertln("leave ind: %x",pInd->srcAddr);
+  log_alertln("leave ind,drcAddr:0x%4x",pInd->srcAddr);
 
+  if(memcmp(pInd->extAddr, NLME_GetExtAddr(), Z_EXTADDR_LEN) == 0){
+    log_alertln("leave ind for me?");
+    osal_stop_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT); 
+  }
   return NULL;
 }
 
@@ -422,6 +439,8 @@ static void Meter_Leave(void)
  leaveReq.silent = 0;
 
  NLME_LeaveReq( &leaveReq );
+ // 启动一个超时,如果还没有离开网络,强制恢复出厂设置,并重启
+ osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT, LTTAPP_DEVICE_LEAVE_TIME_DELAY);
 }
 
 

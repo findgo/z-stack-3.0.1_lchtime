@@ -18,10 +18,11 @@ extern "C"
 
 #define LTLAPP_DEVICE_REJOIN_EVT    0x0001
 #define LTLAPP_DEVICE_RECOVER_EVT   0x0002
+#define LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT 0x0004
 #define LTLAPP_TEST_EVT             0x0100
 
 #define LTLAPP_END_DEVICE_REJOIN_DELAY 10000
-
+#define LTTAPP_DEVICE_LEAVE_TIME_DELAY 2000
 #define LIGHT_OFF                       0x00
 #define LIGHT_ON                        0x01
 
@@ -62,7 +63,7 @@ extern "C"
 /*********************************************************************
  * VARIABLES
  */
-
+extern uint8_t ltlApp_OnNet;
 extern SimpleDescriptionFormat_t ltlApp_SimpleDesc;
 
 // ltlApp_TODO: Declare application specific attributes here

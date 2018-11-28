@@ -232,9 +232,14 @@ void HalLedBlink (uint8 leds, uint8 numBlinks, uint8 percent, uint16 period)
           if(sts->mode < HAL_LED_MODE_BLINK )
           	preBlinkState |= (led & HalLedState);
 
-          sts->mode  = HAL_LED_MODE_OFF;                    /* Stop previous blink */
+          sts->mode  &= HAL_LED_MODE_ON;                    /* Stop previous blink */
+          //sts->mode  = HAL_LED_MODE_OFF;                    /* Stop previous blink */
           sts->time  = period;                              /* Time for one on/off cycle */
-          sts->onPct = percent;                             /* % of cycle LED is on */
+          if(sts->mode == HAL_LED_MODE_OFF)
+            sts->onPct = percent;                             /* % of cycle LED is on */
+          else
+            sts->onPct = 100 - percent;                      /* % of cycle LED is on */
+          
           sts->todo  = numBlinks;                           /* Number of blink cycles */
           if (!numBlinks) sts->mode |= HAL_LED_MODE_FLASH;  /* Continuous */
           sts->next = osal_GetSystemClock();                /* Start now */

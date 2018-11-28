@@ -84,7 +84,7 @@ void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
         COIL1_TRUN((mCoils_Mode_t)cmd);
         LIGHT1_onoff = (COIL1_STATE() > 0) ? TRUE : FALSE;
         LED1_TURN(LIGHT1_onoff);
-/*
+
         reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
         if(reportCmd){
             reportCmd->numAttr = 1;
@@ -97,7 +97,7 @@ void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
 
             mo_free(reportCmd);
         } 
-*/
+
         break;
 #endif
 #if defined(LIGHT_NODE_2)  
@@ -105,7 +105,7 @@ void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
         COIL2_TRUN((mCoils_Mode_t)cmd);
         LIGHT2_onoff = (COIL2_STATE() > 0) ? TRUE : FALSE;
         LED2_TURN(LIGHT2_onoff);
-/*
+
         reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
         if(reportCmd){
             reportCmd->numAttr = 1;
@@ -118,7 +118,7 @@ void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
 
             mo_free(reportCmd);
         }  
-*/        
+
         break;
 #endif
 #if defined(LIGHT_NODE_3)  
@@ -126,7 +126,7 @@ void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
         COIL3_TRUN((mCoils_Mode_t)cmd);
         LIGHT3_onoff = (COIL3_STATE()  > 0) ? TRUE : FALSE;
         LED3_TURN(LIGHT3_onoff);
-/*
+
         reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
         if(reportCmd){
             reportCmd->numAttr = 1;
@@ -139,11 +139,15 @@ void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
 
             mo_free(reportCmd);
         }  
-*/
+
         break;
 #endif
     default:
         return;
     }
+
+    if(!ltlApp_OnNet){
+        HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
+    }   
 }
 

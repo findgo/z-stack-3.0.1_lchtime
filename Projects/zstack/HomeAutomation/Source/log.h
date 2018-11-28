@@ -55,9 +55,9 @@ enum {
 #define log_debugln(format,args...)     log_llln(LOG_LEVEL_DEBUG,format,##args)
 #define log_traceln(format,args...)     log_llln(LOG_LEVEL_DEBUG,format,##args)
 
-
 void log_set_max_level(uint8_t level);
 void log_Init(void);
+void log_msg(const char *format,...);
 void log_ll(uint8_t level,const char *format,...);  
 void log_llln(uint8_t level,const char *format,...);
 

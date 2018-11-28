@@ -153,5 +153,5 @@ static void GenBasicReboot(void)
 }
 static void GenIdentify( uint16_t identifyTime )
 {
-    //mledsetblink(MLED_1, 1, 95 , identifyTime * 105 / 100);
+    HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 10, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
 }

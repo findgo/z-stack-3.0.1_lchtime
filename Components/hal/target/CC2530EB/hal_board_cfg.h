@@ -118,20 +118,20 @@
 #define LED1_BV           BV(3)
 #define LED1_SBIT         P0_3
 #define LED1_DDR          P0DIR
-#define LED1_POLARITY     ACTIVE_HIGH
+#define LED1_POLARITY     ACTIVE_LOW
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
   /* 2 - Red */
   #define LED2_BV           BV(4)
   #define LED2_SBIT         P0_4
   #define LED2_DDR          P0DIR
-  #define LED2_POLARITY     ACTIVE_HIGH
+  #define LED2_POLARITY     ACTIVE_LOW
 
   /* 3 - Yellow */
   #define LED3_BV           BV(5)
   #define LED3_SBIT         P0_5
   #define LED3_DDR          P0DIR
-  #define LED3_POLARITY     ACTIVE_HIGH
+  #define LED3_POLARITY     ACTIVE_LOW
 
 #ifdef ENABLE_LED4_DISABLE_S1
   /* 4 - Orange */

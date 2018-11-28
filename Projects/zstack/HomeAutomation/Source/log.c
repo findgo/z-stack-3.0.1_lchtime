@@ -33,6 +33,14 @@ static void lowlevelPrefix_log(uint8_t level)
     }
 }
 
+void log_msg(const char *format,...)
+{        
+    va_list ap;
+    va_start(ap,format);
+    vprintf(format,ap);
+    va_end(ap);
+}
+
 // 默认输出到stdout
 void log_ll(uint8_t level,const char *format,...)
 {
@@ -44,8 +52,8 @@ void log_ll(uint8_t level,const char *format,...)
         vprintf(format,ap);
         va_end(ap);
     }
-    
 }
+
 void log_llln(uint8_t level,const char *format,...)
 {
     va_list ap;
@@ -80,6 +88,9 @@ __near_func int putchar(int ch)
     return ch;
 }
 #else
+void log_msg(const char *format,...)
+{
+}
 void log_ll(uint8_t level,const char *format,...)
 {
     (void)level;
