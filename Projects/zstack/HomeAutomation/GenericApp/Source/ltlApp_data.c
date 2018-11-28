@@ -70,30 +70,76 @@ void LightAttriInit(void)
 #endif
 }
 
+#define LightReportStatus(nodeNO, reportCmd) ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, nodeNO, 0, LTL_FRAMECTL_DIR_SERVER_CLIENT, TRUE, reportCmd);
+
 void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
 {
     log_debugln("node: %d,cmd: %d!", nodeNO, cmd);
+    ltlReportCmd_t *reportCmd;
+    ltlReport_t *reportList;
 
     switch (nodeNO){
 #if defined(LIGHT_NODE_1)  
     case LIGHT_NODE_1: 
         COIL1_TRUN((mCoils_Mode_t)cmd);
-        LIGHT1_onoff = COIL1_STATE();
+        LIGHT1_onoff = (COIL1_STATE() > 0) ? TRUE : FALSE;
         LED1_TURN(LIGHT1_onoff);
+/*
+        reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
+        if(reportCmd){
+            reportCmd->numAttr = 1;
+            reportList = &(reportCmd->attrList[0]);
+            reportList->attrID = LIGHT1OnoffAttriList[0].attrId;
+            reportList->dataType = LIGHT1OnoffAttriList[0].dataType;
+            reportList->attrData = LIGHT1OnoffAttriList[0].dataPtr;
+            
+            LightReportStatus(nodeNO, reportCmd);
+
+            mo_free(reportCmd);
+        } 
+*/
         break;
 #endif
 #if defined(LIGHT_NODE_2)  
     case LIGHT_NODE_2: 
         COIL2_TRUN((mCoils_Mode_t)cmd);
-        LIGHT2_onoff = COIL2_STATE();
+        LIGHT2_onoff = (COIL2_STATE() > 0) ? TRUE : FALSE;
         LED2_TURN(LIGHT2_onoff);
+/*
+        reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
+        if(reportCmd){
+            reportCmd->numAttr = 1;
+            reportList = &(reportCmd->attrList[0]);
+            reportList->attrID = LIGHT2OnoffAttriList[0].attrId;
+            reportList->dataType = LIGHT2OnoffAttriList[0].dataType;
+            reportList->attrData = LIGHT2OnoffAttriList[0].dataPtr;
+            
+            LightReportStatus(nodeNO, reportCmd);
+
+            mo_free(reportCmd);
+        }  
+*/        
         break;
 #endif
 #if defined(LIGHT_NODE_3)  
     case LIGHT_NODE_3: 
         COIL3_TRUN((mCoils_Mode_t)cmd);
-        LIGHT3_onoff = COIL3_STATE();
+        LIGHT3_onoff = (COIL3_STATE()  > 0) ? TRUE : FALSE;
         LED3_TURN(LIGHT3_onoff);
+/*
+        reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
+        if(reportCmd){
+            reportCmd->numAttr = 1;
+            reportList = &(reportCmd->attrList[0]);
+            reportList->attrID = LIGHT3OnoffAttriList[0].attrId;
+            reportList->dataType = LIGHT3OnoffAttriList[0].dataType;
+            reportList->attrData = LIGHT3OnoffAttriList[0].dataPtr;
+            
+            LightReportStatus(nodeNO, reportCmd);
+
+            mo_free(reportCmd);
+        }  
+*/
         break;
 #endif
     default:

@@ -168,8 +168,8 @@ extern uint8 aExtendedAddress[8];
   #undef ZTOOL_PORT
 #endif
 
-#define MT_UART_TX_BUFF_MAX  128
-#define MT_UART_RX_BUFF_MAX  128
+#define MT_UART_TX_BUFF_MAX  255
+#define MT_UART_RX_BUFF_MAX  2
 #define MT_UART_THRESHOLD   (MT_UART_RX_BUFF_MAX / 2)
 #define MT_UART_IDLE_TIMEOUT 6
 

@@ -104,6 +104,9 @@ static CONST endPointDesc_t ltlApp_Ep =
  */
 static void ltlApp_HandleKeys( byte shift, byte keys );
 static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
+static void *ltlApp_ZdoLeaveInd(void *vPtr);
+static void Meter_Leave(void);
+
 static void hal_coilsInit(void);
 
 
@@ -148,12 +151,13 @@ void ltlApp_Init( byte task_id )
     bdb_RegisterCommissioningStatusCB( ltlApp_ProcessCommissioningStatus );
 
     osal_set_event( task_id, LTLAPP_DEVICE_REJOIN_EVT);  // start device join nwk
-    LED_BLINK();
+    HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 50, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
     hal_coilsInit();
     log_infoln("app started");
+    //ZDO_RegisterForZdoCB(ZDO_LEAVE_IND_CBID, &ltlApp_ZdoLeaveInd);
 
 #if defined(GLOBAL_DEBUG)
-    osal_set_event(ltlApp_TaskID, LTLAPP_TEST_EVT);
+    //osal_set_event(ltlApp_TaskID, LTLAPP_TEST_EVT);
 #endif
 }
 
@@ -189,7 +193,7 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
 
         case ZDO_STATE_CHANGE:
           ltlApp_NwkState = (devStates_t)(MSGpkt->hdr.status);
-          log_alertln("zdo state change: %d", ltlApp_NwkState);
+          log_alertln("zdo state: %d", ltlApp_NwkState);
 
           // now on the network
           if ( (ltlApp_NwkState == DEV_END_DEVICE) || (ltlApp_NwkState == DEV_ROUTER) )
@@ -233,7 +237,7 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
 #if defined(GLOBAL_DEBUG)
   if(events & LTLAPP_TEST_EVT)
   {
-    log_alertln("APP test event");
+    log_alertln("app test event");
     osal_start_timerEx(ltlApp_TaskID, LTLAPP_TEST_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
     return ( events ^ LTLAPP_TEST_EVT );
   }
@@ -259,6 +263,7 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
  */
 static void ltlApp_HandleKeys( byte shift, byte keys )
 {
+    log_debugln("handle key: %x,down: %d", keys, shift);
 #if defined (LIGHT_NODE_1)
     if ( keys & HAL_KEY_SW_1 ){
         LigthApp_OnOffUpdate(LIGHT_NODE_1, MCOILS_MODE_TOGGLE);
@@ -274,6 +279,10 @@ if ( keys & HAL_KEY_SW_2 ){
         LigthApp_OnOffUpdate(LIGHT_NODE_3, MCOILS_MODE_TOGGLE);
     }
 #endif
+    if ( keys & HAL_KEY_SW_4 ){
+        //Meter_Leave();
+    }
+  
 }
 
 /*********************************************************************
@@ -362,7 +371,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED)
       {
         log_debugln("bdb process recover from losing parent!");
-        osal_stop_timerEx( ltlApp_TaskID, LTLAPP_END_DEVICE_REJOIN_DELAY);
+        osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT);
         //We did recover from losing parent
       }
       else
@@ -376,6 +385,14 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
   }
 }
 
+static void *ltlApp_ZdoLeaveInd(void *vPtr)
+{
+  NLME_LeaveInd_t *pInd = (NLME_LeaveInd_t *)vPtr;
+
+  log_alertln("leave ind: %x",pInd->srcAddr);
+
+  return NULL;
+}
 
 static void hal_coilsInit(void)
 {
@@ -388,4 +405,23 @@ static void hal_coilsInit(void)
 //    MCU_IO_DIR_OUTPUT(1, 3);
     mCoilsInit();
 }
+
+static void Meter_Leave(void)
+{
+
+ NLME_LeaveReq_t leaveReq;
+
+ osal_memset((uint8 *)&leaveReq,0,sizeof(NLME_LeaveReq_t));
+
+ osal_memcpy(leaveReq.extAddr,NLME_GetExtAddr(),Z_EXTADDR_LEN);
+
+ leaveReq.removeChildren = 1;
+
+ leaveReq.rejoin = 0;
+
+ leaveReq.silent = 0;
+
+ NLME_LeaveReq( &leaveReq );
+}
+
 

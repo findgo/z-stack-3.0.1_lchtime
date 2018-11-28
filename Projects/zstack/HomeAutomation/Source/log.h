@@ -26,7 +26,9 @@
 extern "C" {
 #endif
 
-
+#if defined(ZAPP_P1)
+#define GLOBAL_DEBUG
+#endif
 enum {
     LOG_LEVEL_ALERT = 0,
     LOG_LEVEL_ERROR,

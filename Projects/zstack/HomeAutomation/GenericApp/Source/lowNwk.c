@@ -43,7 +43,7 @@ uint16 LowNwk_event_loop( uint8 task_id, uint16 events )
     {
       uint8 dealloc = TRUE;
 
-      log_alertln("lownwk(%x) receive a message!",*msgPtr);
+      log_alertln("lownwk(%x) receive!",*msgPtr);
       if ( *msgPtr == AF_INCOMING_MSG_CMD )
       {
         if(((afIncomingMSGPacket_t *)msgPtr)->srcAddr.addrMode == afAddr16Bit) 

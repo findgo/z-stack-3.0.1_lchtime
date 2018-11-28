@@ -244,19 +244,23 @@ void HalKeyInit( void )
   HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
   HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
 #else
-//  HAL_KEY_SW_1_SEL &= ~(HAL_KEY_SW_1_BIT);    /* Set pin function to GPIO */
-//  HAL_KEY_SW_1_DIR &= ~(HAL_KEY_SW_1_BIT);    /* Set pin direction to Input */
-//  HAL_KEY_SW_2_SEL &= ~(HAL_KEY_SW_2_BIT);    /* Set pin function to GPIO */
-//  HAL_KEY_SW_2_DIR &= ~(HAL_KEY_SW_2_BIT);    /* Set pin direction to Input */
-//  HAL_KEY_SW_3_SEL &= ~(HAL_KEY_SW_3_BIT);    /* Set pin function to GPIO */
-//  HAL_KEY_SW_3_DIR &= ~(HAL_KEY_SW_3_BIT);    /* Set pin direction to Input */
-//  P0INP &= ~(HAL_KEY_SW_1_BIT);
-//  P0INP &= ~(HAL_KEY_SW_2_BIT);
-//  P0INP &= ~(HAL_KEY_SW_3_BIT);
-  
+#if 1
+
+  HAL_KEY_SW_1_SEL &= ~(HAL_KEY_SW_1_BIT);    /* Set pin function to GPIO */
+  HAL_KEY_SW_1_DIR &= ~(HAL_KEY_SW_1_BIT);    /* Set pin direction to Input */
+  HAL_KEY_SW_2_SEL &= ~(HAL_KEY_SW_2_BIT);    /* Set pin function to GPIO */
+  HAL_KEY_SW_2_DIR &= ~(HAL_KEY_SW_2_BIT);    /* Set pin direction to Input */
+  HAL_KEY_SW_3_SEL &= ~(HAL_KEY_SW_3_BIT);    /* Set pin function to GPIO */
+  HAL_KEY_SW_3_DIR &= ~(HAL_KEY_SW_3_BIT);    /* Set pin direction to Input */
+  P0INP &= ~(HAL_KEY_SW_1_BIT);
+  P0INP &= ~(HAL_KEY_SW_2_BIT);
+  P0INP &= ~(HAL_KEY_SW_3_BIT);
+  P2INP &= ~ BV(5);
+  #else
   MCU_IO_INPUT_PREP(0,0,MCU_IO_PULLUP); // 配置成输入,并且是上拉
   MCU_IO_INPUT_PREP(0,1,MCU_IO_PULLUP);
   MCU_IO_INPUT_PREP(0,2,MCU_IO_PULLUP);
+  #endif
 #endif
 
   /* Initialize callback function */
@@ -329,7 +333,11 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
     HAL_KEY_JOY_MOVE_PXIFG = ~(HAL_KEY_JOY_MOVE_BIT);
 #else
       /* Rising/Falling edge configuratinn */
-      PICTL &= ~HAL_KEY_SW_Px_EDGEBIT;  /* Clear the edge bit */    
+      PICTL &= ~HAL_KEY_SW_Px_EDGEBIT;  /* Clear the edge bit */   
+
+#if (HAL_KEY_SW_Px_EDGE == HAL_KEY_FALLING_EDGE)
+        PICTL |= HAL_KEY_SW_Px_EDGEBIT;
+#endif
       /* Interrupt configuration:
        * - Enable interrupt generation at the port
        * - Enable CPU interrupt
@@ -338,10 +346,10 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
       HAL_KEY_SW_1_ICTL |= HAL_KEY_SW_1_ICTLBIT;
       HAL_KEY_SW_2_ICTL |= HAL_KEY_SW_2_ICTLBIT;
       HAL_KEY_SW_3_ICTL |= HAL_KEY_SW_3_ICTLBIT;
-      HAL_KEY_SW_Px_IEN |= HAL_KEY_SW_Px_IENBIT;
-      HAL_KEY_SW_1_PXIFG = ~(HAL_KEY_SW_1_BIT);
+      HAL_KEY_SW_1_PXIFG = ~(HAL_KEY_SW_1_BIT);  // 先清中断再使能中断
       HAL_KEY_SW_2_PXIFG = ~(HAL_KEY_SW_2_BIT);
       HAL_KEY_SW_3_PXIFG = ~(HAL_KEY_SW_3_BIT);
+      HAL_KEY_SW_Px_IEN |= HAL_KEY_SW_Px_IENBIT;
 #endif
 
     /* Do this only after the hal_key is configured - to work with sleep stuff */

@@ -92,14 +92,14 @@ ltlGeneral_AppCallbacks_t GeneralAppCb =
 };
 
 void ltl_GeneralBasicAttriInit(void)
-{
+{    
     ltlGeneral_RegisterCmdCallBacks(&GeneralAppCb);
     
     ltl_StrToAppString(MANUFACTURER_NAME, manufactTab, sizeof(manufactTab));
     buildDateCode = mver_getminorver(); 
-    // serialnumber
+    // serialnumber  
     memset(serialnumberTab, 0, sizeof(serialnumberTab));
-    osal_nv_read( ZCD_NV_EXTADDR, 0, Z_EXTADDR_LEN, serialnumberTab );
+    memcpy(serialnumberTab, NLME_GetExtAddr(), Z_EXTADDR_LEN);
 
     // Register the application's attribute list
     ltl_registerAttrList(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO,
