@@ -1468,9 +1468,8 @@
                     <state>NV_INIT</state>
                     <state>NV_RESTORE</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
-                    <state>ZAPP_P1</state>
-                    <state>GLOBAL_DEBUG</state>
-                    <state>xISR_KEYINTERRUPT</state>
+                    <state>xZAPP_P1</state>
+                    <state>ISR_KEYINTERRUPT</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -1635,6 +1634,8 @@
                     <state>$PROJ_DIR$</state>
                     <state>$PROJ_DIR$\..\Source</state>
                     <state>$PROJ_DIR$\..\..\Source</state>
+                    <state>$PROJ_DIR$\..\Source\nwk</state>
+                    <state>$PROJ_DIR$\..\..\Source\ltl</state>
                     <state>$PROJ_DIR$\..\..\..\ZMain\TI2530DB</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\include</state>
                     <state>$PROJ_DIR$\..\..\..\..\..\Components\hal\target\CC2530EB</state>
@@ -2125,24 +2126,24 @@
                 </option>
                 <option>
                     <name>AllowExtraOutput</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>GenerateExtraOutput</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>XExtraOutOverride</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>ExtraOutputFile</name>
-                    <state>GenericApp.sim</state>
+                    <state>LightRouterEB.hex</state>
                 </option>
                 <option>
                     <name>ExtraOutputFormat</name>
                     <version>11</version>
-                    <state>60</state>
+                    <state>23</state>
                 </option>
                 <option>
                     <name>ExtraFormatVariant</name>
@@ -2614,12 +2615,11 @@
                     <state>TC_LINKKEY_JOIN</state>
                     <state>NV_INIT</state>
                     <state>NV_RESTORE</state>
-                    <state>POWER_SAVING</state>
+                    <state>xPOWER_SAVING</state>
                     <state>NWK_AUTO_POLL</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
                     <state>ZAPP_P1</state>
-                    <state>GLOBAL_DEBUG</state>
-                    <state>xISR_KEYINTERRUPT</state>
+                    <state>ISR_KEYINTERRUPT</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>

@@ -105,7 +105,7 @@ extern "C"
 #endif
   //Enable identify
 #ifndef ZCL_IDENTIFY
-  #define ZCL_IDENTIFY
+//  #define ZCL_IDENTIFY   // 灯光控制时路由会出现问题, 去掉 20181128
 #endif
 #ifndef ZDO_MGMT_PERMIT_JOIN_RESPONSE
   #define ZDO_MGMT_PERMIT_JOIN_RESPONSE

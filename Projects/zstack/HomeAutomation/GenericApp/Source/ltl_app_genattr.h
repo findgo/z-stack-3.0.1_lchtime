@@ -8,7 +8,7 @@
 #include "memalloc.h"
 #include "OSAL.h"
 #include "OSAL_nv.h"
-
+#include "hal_led.h"
 // 制造商名字字符串最大长度
 #define MANUFACTURER_NAME_STRING_MAX_LEN 16
 
