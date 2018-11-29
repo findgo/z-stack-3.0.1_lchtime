@@ -341,6 +341,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
 #endif
         log_debugln("bdb process nwk success,and on nwk!");
         ltlApp_OnNet = TRUE;
+        ReportProductID();
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT);
       }
       else
@@ -393,6 +394,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
 #endif
         log_debugln("bdb process recover from losing parent!");
         ltlApp_OnNet = TRUE;
+        ReportProductID();
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT);
         //We did recover from losing parent
       }

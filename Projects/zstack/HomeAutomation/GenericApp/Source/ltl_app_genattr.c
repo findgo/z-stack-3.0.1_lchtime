@@ -155,3 +155,22 @@ static void GenIdentify( uint16_t identifyTime )
 {
     HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 10, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
 }
+
+
+void ReportProductID(void)
+{
+    ltlReportCmd_t *reportCmd;
+    ltlReport_t *reportList;
+
+    reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
+    if(reportCmd){
+        reportCmd->numAttr = 1;
+        reportList = &(reportCmd->attrList[0]);
+        reportList->attrID = ATTRID_BASIC_PRODUCT_ID;
+        reportList->dataType = LTL_DATATYPE_UINT32;
+        reportList->attrData = (uint8_t *)&productID;
+        
+        ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, LTL_FRAMECTL_DIR_SERVER_CLIENT, TRUE, reportCmd);
+        mo_free(reportCmd);
+    }
+}

@@ -21,10 +21,10 @@
 // applition minor version 5 bits ,max 31
 #define APPL_MINOR_VERSION      ( 0 )
 // applition fixed version 5 bits, max 31
-#define APPL_FIXED_VERSION      ( 0 )
+#define APPL_FIXED_VERSION      ( 1 )
 // applition beta version 3 bits, max 7
 // if release set 0
-#define APPL_BETA_VERSION        ( 1 )
+#define APPL_BETA_VERSION        ( 0 )
 
 // hardware version 
 // applition major version 3 bits ,max 7
@@ -41,10 +41,11 @@
 #define MANUFACTURER_NAME  "lchtime"
 
 // product identifier
-#define PRODUCT_IDENTIFIER    ( 1 )
+#define PRODUCT_IDENTIFIER    ( 10000 )
 
 
 void ltl_GeneralBasicAttriInit(void);
+void ReportProductID(void);
 
 
 
