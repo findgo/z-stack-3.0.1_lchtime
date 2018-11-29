@@ -1470,6 +1470,7 @@
                     <state>MULTICAST_ENABLED=FALSE</state>
                     <state>xZAPP_P1</state>
                     <state>ISR_KEYINTERRUPT</state>
+                    <state>HAL_ADC=FALSE</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -1940,7 +1941,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>GenericApp.d51</state>
+                    <state>LchLight.d51</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>
@@ -2620,6 +2621,7 @@
                     <state>MULTICAST_ENABLED=FALSE</state>
                     <state>ZAPP_P1</state>
                     <state>ISR_KEYINTERRUPT</state>
+                    <state>HAL_ADC=FALSE</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -3089,7 +3091,7 @@
                 </option>
                 <option>
                     <name>OutputFile</name>
-                    <state>GenericApp.d51</state>
+                    <state>LchLight.d51</state>
                 </option>
                 <option>
                     <name>OutputFormat</name>

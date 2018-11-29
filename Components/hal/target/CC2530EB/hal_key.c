@@ -107,9 +107,11 @@
 
 /* CPU port interrupt */
 #define HAL_KEY_CPU_PORT_0_IF P0IF
+#define HAL_KEY_CPU_PORT_1_IF P1IF
 #define HAL_KEY_CPU_PORT_2_IF P2IF
 
 #define HAL_KEY_P0_IFG       P0IFG /* Interrupt flag at source */
+#define HAL_KEY_P1_IFG       P1IFG /* Interrupt flag at source */
 #define HAL_KEY_P2_IFG       P2IFG /* Interrupt flag at source */
 
 #if 0
@@ -154,7 +156,7 @@ define HAL_KEY_JOY_CHN   HAL_ADC_CHANNEL_6
 #define HAL_KEY_SW_Px_EDGEBIT   BV(0) 
 #define HAL_KEY_SW_Px_EDGE      HAL_KEY_FALLING_EDGE
 
-/* interrupt enable (P0 at IEN1(bit5)), P1 at IEN1(bit4), P2 at IEN2(bit1) */
+/* interrupt enable (P0 at IEN1(bit5)), P1 at IEN2(bit4), P2 at IEN2(bit1) */
 #define HAL_KEY_SW_Px_IEN      IEN1  /* CPU interrupt mask register */
 #define HAL_KEY_SW_Px_IENBIT   BV(5) /* Mask bit for all of Port_0 */  
 
@@ -717,7 +719,19 @@ HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
   HAL_EXIT_ISR();
 }
 
+HAL_ISR_FUNCTION( halKeyPort1Isr, P1INT_VECTOR )
+{
+    HAL_ENTER_ISR();
 
+
+
+
+    HAL_KEY_P1_IFG = 0;
+    HAL_KEY_CPU_PORT_1_IF = 0;  
+    
+    CLEAR_SLEEP_MODE();
+    HAL_EXIT_ISR();
+}
 /**************************************************************************************************
  * @fn      halKeyPort2Isr
  *

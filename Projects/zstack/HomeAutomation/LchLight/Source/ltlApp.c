@@ -141,7 +141,8 @@ void ltlApp_Init( byte task_id )
     ltl_GeneralBasicAttriInit();
     
     // Register the application's attribute list
-        
+    LightAttriInit();
+    
     // Register the Application to receive the unprocessed Foundation command/response messages
     LowNwk_registerForMsg( ltlApp_TaskID );
     
