@@ -10,20 +10,19 @@ extern "C"
 #include "log.h" 
 
 
-#define TEMP_NODE_1  1
-#define HUMI_NODE_2  2
+#define TEMP_NODE  1
+#define HUMI_NODE  2
 
 
 #define LTLAPP_DEVICE_REJOIN_EVT    0x0001
 #define LTLAPP_DEVICE_RECOVER_EVT   0x0002
 #define LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT 0x0004
+#define LTLAPP_DEVICE_MEASURE_EVT  0x0008
 #define LTLAPP_TEST_EVT             0x0100
 
-#define LTLAPP_END_DEVICE_REJOIN_DELAY 10000
-#define LTTAPP_DEVICE_LEAVE_TIME_DELAY 2000
-#define LIGHT_OFF                       0x00
-#define LIGHT_ON                        0x01
-
+#define LTLAPP_END_DEVICE_REJOIN_DELAY      10000
+#define LTLAPP_DEVICE_LEAVE_TIME_DELAY      2000
+#define LTLAPP_DEVICE_MEASURE_TIME_DELAY    30000
 #define LED1_TURN(state)       HalLedSet(HAL_LED_1, (state > 0) ? HAL_LED_MODE_ON : HAL_LED_MODE_OFF)
 
 /*********************************************************************
@@ -67,7 +66,8 @@ extern void ltlApp_Init( byte task_id );
  */
 extern UINT16 ltlApp_event_loop( byte task_id, UINT16 events );
 
-extern void TempperatureSensorAttriInit(void);
+extern void TemperatureSensorAttriInit(void);
+extern void TemperatureSensorReport(void);
 
 
 /*********************************************************************

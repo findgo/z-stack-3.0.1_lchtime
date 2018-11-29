@@ -140,6 +140,15 @@
  */
 #define st(x)      do { x } while (__LINE__ == -1)
 
+// add by mo 20181129
+// 操作定义 成功: 0: 失败 :１
+#ifndef Failed
+#define Failed 1
+#endif
+
+#ifndef Success
+#define Success 0
+#endif
 
 /**************************************************************************************************
  */

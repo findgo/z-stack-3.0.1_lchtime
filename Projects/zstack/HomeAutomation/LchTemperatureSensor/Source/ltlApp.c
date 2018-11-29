@@ -24,6 +24,7 @@
 
 #include "ltl_app_genattr.h"
 
+#include "SHT2x.h"
 /*********************************************************************
  * MACROS
  */
@@ -51,10 +52,12 @@ byte ltlApp_TaskID;
 /*********************************************************************
  * LOCAL VARIABLES
  */
+#define APP_TYR_IN_NET_CNT    10
 
 devStates_t ltlApp_NwkState = DEV_INIT;
 
 uint8_t ltlApp_OnNet = FALSE;
+uint8_t ltlApp_TryinNetCount = 0;
 /*********************************************************************
  * LOCAL VARIABLES
  */
@@ -106,6 +109,7 @@ static void ltlApp_HandleKeys( byte shift, byte keys );
 static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
 static void *ltlApp_ZdoLeaveInd(void *vPtr);
 static void Meter_Leave(void);
+static void ltlApp_NetUpdate(uint8_t isOnNet);
 
 
 /*********************************************************************
@@ -137,7 +141,7 @@ void ltlApp_Init( byte task_id )
     ltl_GeneralBasicAttriInit();
     
     // Register the application's attribute list
-    TempperatureSensorAttriInit();
+    TemperatureSensorAttriInit();
     
     // Register the Application to receive the unprocessed Foundation command/response messages
     LowNwk_registerForMsg( ltlApp_TaskID );
@@ -147,11 +151,11 @@ void ltlApp_Init( byte task_id )
     
     bdb_RegisterCommissioningStatusCB( ltlApp_ProcessCommissioningStatus );
 
-    osal_set_event( task_id, LTLAPP_DEVICE_REJOIN_EVT);  // start device join nwk
-    HalLedBlink(HAL_LED_1, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
-
     log_infoln("app started");
     ZDO_RegisterForZdoCB(ZDO_LEAVE_IND_CBID, &ltlApp_ZdoLeaveInd);
+
+    SHT2x_Init(); // 初始化iic
+    SHT2x_SetFeature(SHT2x_Resolution_12_14, FALSE); // 初始化精度 和 加热
 
 #if defined(GLOBAL_DEBUG)
     osal_set_event(ltlApp_TaskID, LTLAPP_TEST_EVT);
@@ -215,8 +219,9 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
   {
   
     log_alertln("attempt rejoin nwk!");
+    if(++ltlApp_TryinNetCount   <  APP_TYR_IN_NET_CNT)
+        bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
     
-    bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
     return ( events ^ LTLAPP_DEVICE_REJOIN_EVT );
   }
  
@@ -241,6 +246,15 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
     
     return ( events ^ LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT );
   }
+
+  if(events & LTLAPP_DEVICE_MEASURE_EVT)
+  {
+    TemperatureSensorReport();
+    
+    osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_MEASURE_EVT, LTLAPP_DEVICE_MEASURE_TIME_DELAY);
+    return ( events ^ LTLAPP_DEVICE_MEASURE_EVT );
+  }
+  
 #if defined(GLOBAL_DEBUG)
   if(events & LTLAPP_TEST_EVT)
   {
@@ -273,9 +287,18 @@ static void ltlApp_HandleKeys( byte shift, byte keys )
     log_debugln("handle key: %x,down: %d", keys, shift);
 
     if ( keys & HAL_KEY_SW_1 ){
-        log_debugln("key1 down!");
-        //Meter_Leave();
+        if(!ltlApp_OnNet){
+            ltlApp_TryinNetCount = 0;
+            osal_set_event( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT);  // start device join nwk
+            HalLedBlink(HAL_LED_1, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
+        }
     } 
+
+    if( keys & HAL_KEY_SW_2 ){
+        log_debugln("key1 down!");
+        Meter_Leave();
+    }
+    
 }
 
 /*********************************************************************
@@ -314,8 +337,8 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         // show on net
         //LED1_TURN(COIL1_STATE());
         log_debugln("bdb process nwk success,and on nwk!");
-        ltlApp_OnNet = TRUE;
-        ReportProductID();
+
+        ltlApp_NetUpdate(TRUE);
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT);
       }
       else
@@ -325,8 +348,8 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         //Want to try other channels?
         //try with bdb_setChannelAttribute
         // try again??
-        ltlApp_OnNet = FALSE;
         log_debugln("bdb process nwk failed(%d),rejoin after a monment!",bdbCommissioningModeMsg->bdbCommissioningStatus);
+        ltlApp_NetUpdate(FALSE);
         osal_start_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
       }
     break;
@@ -360,15 +383,14 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
        // LED1_TURN(COIL1_STATE());
 
         log_debugln("bdb process recover from losing parent!");
-        ltlApp_OnNet = TRUE;
-        ReportProductID();
+        ltlApp_NetUpdate(TRUE);
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT);
         //We did recover from losing parent
       }
       else
       {      
         log_debugln("bdb process parent not found,and rejoin a nwk!");        
-        ltlApp_OnNet = FALSE;
+        ltlApp_NetUpdate(FALSE);
         //Parent not found, attempt to rejoin again after a fixed delay
         osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
       }
@@ -407,7 +429,20 @@ static void Meter_Leave(void)
 
  NLME_LeaveReq( &leaveReq );
  // 启动一个超时,如果还没有离开网络,强制恢复出厂设置,并重启
- osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT, LTTAPP_DEVICE_LEAVE_TIME_DELAY);
+ osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT, LTLAPP_DEVICE_LEAVE_TIME_DELAY);
 }
 
-
+static void ltlApp_NetUpdate(uint8_t isOnNet)
+{
+    if(isOnNet){
+        ltlApp_OnNet = TRUE;
+        HalLedSet(HAL_LED_1, HAL_LED_MODE_OFF);
+        ReportProductID();
+        osal_set_event(ltlApp_TaskID, LTLAPP_DEVICE_MEASURE_EVT);
+    }
+    else{
+        osal_stop_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_MEASURE_EVT);
+        ltlApp_OnNet = FALSE;
+    }
+        
+}

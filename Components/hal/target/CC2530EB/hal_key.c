@@ -380,8 +380,6 @@ uint8 HalKeyRead ( void )
  *
  * @return  None
  **************************************************************************************************/
-static uint8_t Key1Count = 0;
-
 void HalKeyPoll (void)
 {
   uint8 keys = 0;
@@ -419,9 +417,9 @@ void HalKeyPoll (void)
   if (HAL_PUSH_BUTTON1())
   {
     keys |= HAL_KEY_SW_1;  
-    //osal_start_timerEx(Hal_TaskID, HAL_KEY_FIVE_EVENT, 200); // 启动一个小超时, 清除不满5次的,防目识动作
+    
+    osal_start_timerEx(Hal_TaskID, HAL_KEY_TAKE_EVENT, 5000);
   }
-  
 #endif
 
   /* Invoke Callback if new keys were depressed */
@@ -435,9 +433,19 @@ void HalKeyPoll (void)
   }
 }
 
-void HalKeyLongCheck(void)
+void HalKeyTakeCheck(void)
 {
+    uint8 keys = 0;
 
+    if( HAL_PUSH_BUTTON1()){
+        keys |= HAL_KEY_SW_2;
+    }
+    
+  /* Invoke Callback if new keys were depressed */
+  if (pHalKeyProcessFunction && keys ) //in legacy modes, only report key presses and do not report when a key is released
+  {
+  (pHalKeyProcessFunction) (keys, HAL_KEY_STATE_NORMAL);
+  }
 }
 
 /**************************************************************************************************
