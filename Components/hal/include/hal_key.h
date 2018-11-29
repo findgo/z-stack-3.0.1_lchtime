@@ -92,9 +92,9 @@ extern "C"
 #else
 // add by mo
 #define HAL_KEY_SW_1 0x01  // Button S1 if available
-#define HAL_KEY_SW_2 0x02  // Button S2 if available
-#define HAL_KEY_SW_3 0x04  // Button S3 if available
-#define HAL_KEY_SW_4 0x08  
+//#define HAL_KEY_SW_2 0x02  // Button S2 if available
+//#define HAL_KEY_SW_3 0x04  // Button S3 if available
+//#define HAL_KEY_SW_4 0x08  
 //#define HAL_KEY_SW_5 0x10  
 //#define HAL_KEY_SW_6 0x20  
 #define HAL_KEY_SW_7 0x40  
@@ -143,8 +143,7 @@ extern uint8 HalKeyExitSleep ( void );
  * This is for internal used by hal_driver
  */
 extern void HalKeyPoll ( void );
-extern void HalKeyFiveCheck(void);
-
+extern void HalKeyLongCheck(void);
 /*
  * This is for internal used by hal_sleep
  */

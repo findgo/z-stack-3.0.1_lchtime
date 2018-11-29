@@ -20,7 +20,6 @@
 /* HAL */
 #include "hal_led.h"
 #include "hal_key.h"
-#include "mcoils.h"
 #include "lownwk.h"
 
 #include "ltl_app_genattr.h"
@@ -108,8 +107,6 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
 static void *ltlApp_ZdoLeaveInd(void *vPtr);
 static void Meter_Leave(void);
 
-static void hal_coilsInit(void);
-
 
 /*********************************************************************
  * @fn          ltlApp_Init
@@ -132,8 +129,7 @@ void ltlApp_Init( byte task_id )
     ltlApp_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;
     ltlApp_DstAddr.endPoint = LCHTIMEAPP_ENDPOINT;
     ltlApp_DstAddr.addr.shortAddr = 0x0000;
-    
-    
+      
     // This app is part of the Home Automation Profile, resgister a ep
     bdb_RegisterSimpleDescriptor( &ltlApp_SimpleDesc );
     
@@ -141,7 +137,8 @@ void ltlApp_Init( byte task_id )
     ltl_GeneralBasicAttriInit();
     
     // Register the application's attribute list
-    LightAttriInit();
+    TempperatureSensorAttriInit();
+    
     // Register the Application to receive the unprocessed Foundation command/response messages
     LowNwk_registerForMsg( ltlApp_TaskID );
     
@@ -151,8 +148,8 @@ void ltlApp_Init( byte task_id )
     bdb_RegisterCommissioningStatusCB( ltlApp_ProcessCommissioningStatus );
 
     osal_set_event( task_id, LTLAPP_DEVICE_REJOIN_EVT);  // start device join nwk
-    HalLedBlink(HAL_LED_1 | HAL_LED_2 | HAL_LED_3, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
-    hal_coilsInit();
+    HalLedBlink(HAL_LED_1, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
+
     log_infoln("app started");
     ZDO_RegisterForZdoCB(ZDO_LEAVE_IND_CBID, &ltlApp_ZdoLeaveInd);
 
@@ -274,26 +271,11 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
 static void ltlApp_HandleKeys( byte shift, byte keys )
 {
     log_debugln("handle key: %x,down: %d", keys, shift);
-#if defined (LIGHT_NODE_1)
+
     if ( keys & HAL_KEY_SW_1 ){
-        LigthApp_OnOffUpdate(LIGHT_NODE_1, MCOILS_MODE_TOGGLE);
-    }
-#endif
-#if defined (LIGHT_NODE_2)
-if ( keys & HAL_KEY_SW_2 ){
-        LigthApp_OnOffUpdate(LIGHT_NODE_2, MCOILS_MODE_TOGGLE);
-    }
-#endif
-#if defined (LIGHT_NODE_3)
-    if ( keys & HAL_KEY_SW_3 ){
-        LigthApp_OnOffUpdate(LIGHT_NODE_3, MCOILS_MODE_TOGGLE);
-    }
-#endif
-    if ( keys & HAL_KEY_SW_4 ){
-        log_debugln("key4 down!");
-        Meter_Leave();
-    }
-  
+        log_debugln("key1 down!");
+        //Meter_Leave();
+    } 
 }
 
 /*********************************************************************
@@ -330,15 +312,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         //YOUR JOB:
         //We are on the nwk, what now?
         // show on net
-#if defined (LIGHT_NODE_1)
-        LED1_TURN(COIL1_STATE());
-#endif
-#if defined (LIGHT_NODE_2)
-        LED2_TURN(COIL2_STATE());
-#endif
-#if defined (LIGHT_NODE_3)
-        LED3_TURN(COIL3_STATE());
-#endif
+        //LED1_TURN(COIL1_STATE());
         log_debugln("bdb process nwk success,and on nwk!");
         ltlApp_OnNet = TRUE;
         ReportProductID();
@@ -383,15 +357,8 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
     case BDB_COMMISSIONING_PARENT_LOST:
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED)
       {
-#if defined (LIGHT_NODE_1)
-        LED1_TURN(COIL1_STATE());
-#endif
-#if defined (LIGHT_NODE_2)
-        LED2_TURN(COIL2_STATE());
-#endif
-#if defined (LIGHT_NODE_3)
-        LED3_TURN(COIL3_STATE());
-#endif
+       // LED1_TURN(COIL1_STATE());
+
         log_debugln("bdb process recover from losing parent!");
         ltlApp_OnNet = TRUE;
         ReportProductID();
@@ -421,18 +388,6 @@ static void *ltlApp_ZdoLeaveInd(void *vPtr)
     osal_stop_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT); 
   }
   return NULL;
-}
-
-static void hal_coilsInit(void)
-{
-// init coils pin
-    COIL1_DDR |= COIL1_BV;
-    COIL2_DDR |= COIL2_BV;    
-    COIL3_DDR |= COIL3_BV;
-//    MCU_IO_DIR_OUTPUT(0, 6);
-//    MCU_IO_DIR_OUTPUT(1, 2);
-//    MCU_IO_DIR_OUTPUT(1, 3);
-    mCoilsInit();
 }
 
 static void Meter_Leave(void)

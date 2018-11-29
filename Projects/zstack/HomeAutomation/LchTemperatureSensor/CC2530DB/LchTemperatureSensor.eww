@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\LchTemperatureSensor.ewp</path>
+  </project>
+  <batchBuild>
+    <batchDefinition>
+      <name>ALL</name>
+      <member>
+        <project>LchTemperatureSensor</project>
+        <configuration>CoordinatorEB</configuration>
+      </member>
+      <member>
+        <project>LchTemperatureSensor</project>
+        <configuration>RouterEB</configuration>
+      </member>
+      <member>
+        <project>LchTemperatureSensor</project>
+        <configuration>EndDeviceEB</configuration>
+      </member>
+      <member>
+        <project>LchTemperatureSensor</project>
+        <configuration>RouterZLight</configuration>
+      </member>
+    </batchDefinition>
+  </batchBuild>
+</workspace>
+
+

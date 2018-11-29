@@ -235,7 +235,7 @@ uint16 Hal_ProcessEvent( uint8 task_id, uint16 events )
   if (events & HAL_KEY_FIVE_EVENT)
   {
   #if (defined HAL_KEY) && (HAL_KEY == TRUE)
-    HalKeyFiveCheck();
+    HalKeyLongCheck();
   #endif
     return events ^ HAL_KEY_FIVE_EVENT;
   }

@@ -41,7 +41,7 @@
 #define MANUFACTURER_NAME  "lchtime"
 
 // product identifier
-#define PRODUCT_IDENTIFIER    ( 10050 )
+#define PRODUCT_IDENTIFIER    ( 10000 )
 
 
 void ltl_GeneralBasicAttriInit(void);

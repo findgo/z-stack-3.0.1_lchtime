@@ -145,41 +145,6 @@
 #endif
 #endif
 
-// 配置3个继电器IO by mo add 20181124
-/* 1 */
-#define COIL1_BV           BV(6)
-#define COIL1_SBIT         P0_6
-#define COIL1_DDR          P0DIR
-#define COIL1_POLARITY     ACTIVE_LOW
-
-/* 2 */
-#define COIL2_BV           BV(2)
-#define COIL2_SBIT         P1_2
-#define COIL2_DDR          P1DIR
-#define COIL2_POLARITY     ACTIVE_LOW
-
-/* 3 */
-#define COIL3_BV           BV(3)
-#define COIL3_SBIT         P1_3
-#define COIL3_DDR          P1DIR
-#define COIL3_POLARITY     ACTIVE_LOW
-
-#define HAL_TURN_OFF_COIL1()       st( COIL1_SBIT = COIL1_POLARITY (0); )
-#define HAL_TURN_OFF_COIL2()       st( COIL2_SBIT = COIL2_POLARITY (0); )
-#define HAL_TURN_OFF_COIL3()       st( COIL3_SBIT = COIL3_POLARITY (0); )
-
-#define HAL_TURN_ON_COIL1()        st( COIL1_SBIT = COIL1_POLARITY (1); )
-#define HAL_TURN_ON_COIL2()        st( COIL2_SBIT = COIL2_POLARITY (1); )
-#define HAL_TURN_ON_COIL3()        st( COIL3_SBIT = COIL3_POLARITY (1); )
-
-#define HAL_TOGGLE_COIL1()         st( if (COIL1_SBIT) { COIL1_SBIT = 0; } else { COIL1_SBIT = 1;} )
-#define HAL_TOGGLE_COIL2()         st( if (COIL2_SBIT) { COIL2_SBIT = 0; } else { COIL2_SBIT = 1;} )
-#define HAL_TOGGLE_COIL3()         st( if (COIL3_SBIT) { COIL3_SBIT = 0; } else { COIL3_SBIT = 1;} )
-
-#define HAL_STATE_COIL1()          (COIL1_POLARITY (COIL1_SBIT))   
-#define HAL_STATE_COIL2()          (COIL2_POLARITY (COIL2_SBIT))
-#define HAL_STATE_COIL3()          (COIL3_POLARITY (COIL3_SBIT))
-
 /* ------------------------------------------------------------------------------------------------
  *                                       GPIO Configuration
  * ------------------------------------------------------------------------------------------------
@@ -285,8 +250,8 @@
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
 
 /* S1 */
-#define PUSH1_BV          BV(0)
-#define PUSH1_SBIT        P0_0
+#define PUSH1_BV          BV(2)
+#define PUSH1_SBIT        P1_2
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
   #define PUSH1_POLARITY    ACTIVE_LOW//ACTIVE_HIGH
@@ -415,12 +380,12 @@ extern void MAC_RfFrontendSetup(void);
                                                                  \
   HAL_TURN_OFF_LED1();                                           \
   LED1_DDR |= LED1_BV;                                           \
-  HAL_TURN_OFF_LED2();                                           \
-  LED2_DDR |= LED2_BV;                                           \
-  HAL_TURN_OFF_LED3();                                           \
-  LED3_DDR |= LED3_BV;                                           \
-  HAL_TURN_OFF_LED4();                                           \
-  LED4_SET_DIR();                                                \
+  /*HAL_TURN_OFF_LED2();*/                                           \
+  /*LED2_DDR |= LED2_BV;*/                                           \
+  /*HAL_TURN_OFF_LED3();*/                                           \
+  /*LED3_DDR |= LED3_BV;*/                                           \
+  /*HAL_TURN_OFF_LED4(); */                                          \
+  /*LED4_SET_DIR();  */                                                \
                                                                  \
   /* configure tristates */                                      \
   /*P0INP |= PUSH2_BV;  */                                           \
