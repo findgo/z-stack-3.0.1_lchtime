@@ -426,6 +426,10 @@ uint8 HalKeyRead ( void )
  *
  * @return  None
  **************************************************************************************************/
+static uint8_t Key1Count = 0;
+static uint8_t Key2Count = 0;
+static uint8_t Key3Count = 0;
+
 void HalKeyPoll (void)
 {
   uint8 keys = 0;
@@ -463,19 +467,43 @@ void HalKeyPoll (void)
   if (HAL_PUSH_BUTTON1())
   {
     keys |= HAL_KEY_SW_1;
+    ++Key1Count;
+    Key2Count = 0;
+    Key3Count = 0;
   }
 
   if (HAL_PUSH_BUTTON2())
   {
     keys |= HAL_KEY_SW_2;
+    ++Key2Count;
+    Key1Count = 0;
+    Key3Count = 0;
   }
   
   if (HAL_PUSH_BUTTON3())
   {
     keys |= HAL_KEY_SW_3;
+    ++Key3Count;
+    Key1Count = 0;
+    Key2Count = 0;
   }
 
 #endif
+  if(keys){
+    if((Key1Count == 5 )|| (Key2Count == 5) || (Key3Count == 5) ){
+        osal_start_timerEx(Hal_TaskID, HAL_KEY_FIVE_EVENT, 5000);
+    }
+    else if((Key1Count > 5 )|| (Key2Count > 5) || (Key3Count > 5) ) {
+        osal_stop_timerEx(Hal_TaskID, HAL_KEY_FIVE_EVENT);
+        Key3Count = 0;
+        Key1Count = 0;
+        Key2Count = 0;
+    }
+    else{
+        osal_start_timerEx(Hal_TaskID, HAL_KEY_FIVE_EVENT, 1000); // 启动一个小超时, 清除不满5次的,防目识动作
+    }
+  }
+
 
   /* Invoke Callback if new keys were depressed */
   if (pHalKeyProcessFunction
@@ -488,6 +516,23 @@ void HalKeyPoll (void)
   }
 }
 
+void HalKeyFiveCheck(void)
+{
+    uint8 keys = 0;
+
+    if(((Key1Count == 5) &&  HAL_PUSH_BUTTON1()) || ((Key2Count == 5) &&  HAL_PUSH_BUTTON2()) || ((Key3Count == 5) &&  HAL_PUSH_BUTTON3())){
+        keys |= HAL_KEY_SW_4;
+    }
+    Key1Count = 0;
+    Key2Count = 0;
+    Key3Count = 0;
+
+      /* Invoke Callback if new keys were depressed */
+  if (pHalKeyProcessFunction && keys )//in legacy modes, only report key presses and do not report when a key is released
+  {
+    (pHalKeyProcessFunction) (keys, HAL_KEY_STATE_NORMAL);
+  }
+}
 /**************************************************************************************************
  * @fn      halGetJoyKeyInput
  *

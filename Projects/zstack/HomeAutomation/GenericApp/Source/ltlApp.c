@@ -290,6 +290,7 @@ if ( keys & HAL_KEY_SW_2 ){
     }
 #endif
     if ( keys & HAL_KEY_SW_4 ){
+        log_debugln("key4 down!");
         Meter_Leave();
     }
   
@@ -381,6 +382,15 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
     case BDB_COMMISSIONING_PARENT_LOST:
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED)
       {
+#if defined (LIGHT_NODE_1)
+        LED1_TURN(COIL1_STATE());
+#endif
+#if defined (LIGHT_NODE_2)
+        LED2_TURN(COIL2_STATE());
+#endif
+#if defined (LIGHT_NODE_3)
+        LED3_TURN(COIL3_STATE());
+#endif
         log_debugln("bdb process recover from losing parent!");
         ltlApp_OnNet = TRUE;
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT);

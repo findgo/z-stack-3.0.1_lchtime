@@ -59,6 +59,8 @@ extern "C"
 #define HAL_LED_BLINK_EVENT                 0x0020
 #define HAL_KEY_EVENT                       0x0010
 
+#define HAL_KEY_FIVE_EVENT                   0x0100
+
 #if defined POWER_SAVING
 #define HAL_SLEEP_TIMER_EVENT               0x0004
 #define HAL_PWRMGR_HOLD_EVENT               0x0002

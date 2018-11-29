@@ -143,6 +143,7 @@ extern uint8 HalKeyExitSleep ( void );
  * This is for internal used by hal_driver
  */
 extern void HalKeyPoll ( void );
+extern void HalKeyFiveCheck(void);
 
 /*
  * This is for internal used by hal_sleep
