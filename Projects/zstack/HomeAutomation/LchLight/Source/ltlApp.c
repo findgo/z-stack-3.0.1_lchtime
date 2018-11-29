@@ -107,6 +107,7 @@ static void ltlApp_HandleKeys( byte shift, byte keys );
 static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbCommissioningModeMsg);
 static void *ltlApp_ZdoLeaveInd(void *vPtr);
 static void Meter_Leave(void);
+static void ltlApp_NetUpdate(uint8_t isOnNet);
 
 static void hal_coilsInit(void);
 
@@ -331,18 +332,10 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         //YOUR JOB:
         //We are on the nwk, what now?
         // show on net
-#if defined (LIGHT_NODE_1)
-        LED1_TURN(COIL1_STATE());
-#endif
-#if defined (LIGHT_NODE_2)
-        LED2_TURN(COIL2_STATE());
-#endif
-#if defined (LIGHT_NODE_3)
-        LED3_TURN(COIL3_STATE());
-#endif
+
         log_debugln("bdb process nwk success,and on nwk!");
-        ltlApp_OnNet = TRUE;
-        ReportProductID();
+
+        ltlApp_NetUpdate(TRUE);
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT);
       }
       else
@@ -352,7 +345,7 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
         //Want to try other channels?
         //try with bdb_setChannelAttribute
         // try again??
-        ltlApp_OnNet = FALSE;
+        ltlApp_NetUpdate(FALSE);
         log_debugln("bdb process nwk failed(%d),rejoin after a monment!",bdbCommissioningModeMsg->bdbCommissioningStatus);
         osal_start_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
       }
@@ -384,25 +377,15 @@ static void ltlApp_ProcessCommissioningStatus(bdbCommissioningModeMsg_t *bdbComm
     case BDB_COMMISSIONING_PARENT_LOST:
       if(bdbCommissioningModeMsg->bdbCommissioningStatus == BDB_COMMISSIONING_NETWORK_RESTORED)
       {
-#if defined (LIGHT_NODE_1)
-        LED1_TURN(COIL1_STATE());
-#endif
-#if defined (LIGHT_NODE_2)
-        LED2_TURN(COIL2_STATE());
-#endif
-#if defined (LIGHT_NODE_3)
-        LED3_TURN(COIL3_STATE());
-#endif
         log_debugln("bdb process recover from losing parent!");
-        ltlApp_OnNet = TRUE;
-        ReportProductID();
+        ltlApp_NetUpdate(TRUE);
         osal_stop_timerEx( ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT);
         //We did recover from losing parent
       }
       else
       {      
         log_debugln("bdb process parent not found,and rejoin a nwk!");        
-        ltlApp_OnNet = FALSE;
+        ltlApp_NetUpdate(FALSE);
         //Parent not found, attempt to rejoin again after a fixed delay
         osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_RECOVER_EVT, LTLAPP_END_DEVICE_REJOIN_DELAY);
       }
@@ -453,7 +436,29 @@ static void Meter_Leave(void)
 
  NLME_LeaveReq( &leaveReq );
  // 启动一个超时,如果还没有离开网络,强制恢复出厂设置,并重启
- osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT, LTTAPP_DEVICE_LEAVE_TIME_DELAY);
+ osal_start_timerEx(ltlApp_TaskID, LTLAPP_DEVICE_LEAVE_TIMEOUT_EVT, LTLAPP_DEVICE_LEAVE_TIME_DELAY);
+}
+
+static void ltlApp_NetUpdate(uint8_t isOnNet)
+{
+    if(isOnNet){
+#if defined (LIGHT_NODE_1)
+        LED1_TURN(COIL1_STATE());
+#endif
+#if defined (LIGHT_NODE_2)
+        LED2_TURN(COIL2_STATE());
+#endif
+#if defined (LIGHT_NODE_3)
+        LED3_TURN(COIL3_STATE());
+#endif
+        ltlApp_OnNet = TRUE;
+        HalLedSet(HAL_LED_1, HAL_LED_MODE_OFF);
+        ReportProductID();
+    }
+    else{
+        ltlApp_OnNet = FALSE;
+    }
+        
 }
 
 

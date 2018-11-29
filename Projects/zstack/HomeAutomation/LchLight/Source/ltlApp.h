@@ -22,7 +22,7 @@ extern "C"
 #define LTLAPP_TEST_EVT             0x0100
 
 #define LTLAPP_END_DEVICE_REJOIN_DELAY 10000
-#define LTTAPP_DEVICE_LEAVE_TIME_DELAY 2000
+#define LTLAPP_DEVICE_LEAVE_TIME_DELAY 2000
 #define LIGHT_OFF                       0x00
 #define LIGHT_ON                        0x01
 
