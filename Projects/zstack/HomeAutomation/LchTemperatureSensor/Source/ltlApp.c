@@ -219,8 +219,10 @@ uint16 ltlApp_event_loop( uint8 task_id, uint16 events )
   {
   
     log_alertln("attempt rejoin nwk!");
-    if(++ltlApp_TryinNetCount   <  APP_TYR_IN_NET_CNT)
+    if(++ltlApp_TryinNetCount    <  APP_TYR_IN_NET_CNT)
         bdb_StartCommissioning(BDB_COMMISSIONING_MODE_NWK_STEERING);
+    else
+        HalLedSet(HAL_LED_1, HAL_LED_MODE_OFF);
     
     return ( events ^ LTLAPP_DEVICE_REJOIN_EVT );
   }
