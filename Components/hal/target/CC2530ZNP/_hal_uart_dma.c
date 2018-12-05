@@ -358,7 +358,7 @@ static void HalUARTInitDMA(void)
 
 #if (HAL_UART_DMA == 1)
 #if !defined(USER_REMAP_U02U1) 
-  //PERCFG &= ~HAL_UART_PERCFG_BIT;    // Set UART0 I/O to Alt. 1 location on P0.
+  PERCFG &= ~HAL_UART_PERCFG_BIT;    // Set UART0 I/O to Alt. 1 location on P0.
 #else
   PERCFG |= HAL_UART_PERCFG_BIT;    // Set UART0 I/O to Alt. 2 location on P1.
 #endif

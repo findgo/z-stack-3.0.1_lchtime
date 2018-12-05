@@ -78,8 +78,6 @@ static void MT_SapiAppRegister(uint8 *pBuf);
 
 static void MT_SapiStartNwk(uint8* pBuf);
 
-extern void MT_SapiAfDataRequest(uint8 *pBuf);
-
 
 /***************************************************************************************************
  * @fn      MT_sapiCommandProcessing
@@ -148,16 +146,16 @@ uint8 MT_SapiCommandProcessing(uint8 *pBuf)
     case MT_SAPI_GET_DEV_ALL_INFO_REQ:
       MT_SapiGetDevAllInfo(pBuf);
       break;
+    
     case MT_SAPI_WRITE_LOGICAL_TYPE:
       MT_SapiWriteLogicalType(pBuf);
       break;
-    case MT_SAPI_AF_DATA_REQUEST:
-      MT_SapiAfDataRequest(pBuf);
-      break;
+    
     case MT_SAPI_START_NWK:
       MT_SapiStartNwk(pBuf);
       break;
  #endif
+ 
     default:
       status = MT_RPC_ERR_COMMAND_ID;
       break;

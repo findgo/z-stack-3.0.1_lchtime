@@ -371,7 +371,7 @@ extern "C"
 // SAPI MT Command Identifiers
 /* AREQ from Host */
 #define MT_SAPI_SYS_RESET                   0x09
-#define MT_SAPI_START_NWK                   0x5a
+#define MT_SAPI_START_NWK                   0x5a // add by mo
 
 /* SREQ/SRSP */
 #define MT_SAPI_START_REQ                   0x00
@@ -385,11 +385,10 @@ extern "C"
 #define MT_SAPI_PMT_JOIN_REQ                0x08
 #define MT_SAPI_APP_REGISTER_REQ            0x0a
 // by mo
-#define MT_SAPI_RESET_FACTORY               0x70
-#define MT_SAPI_GET_DEV_ALL_INFO_REQ        0x71
-// 0x72不用
-#define MT_SAPI_WRITE_LOGICAL_TYPE          0x73
-#define MT_SAPI_AF_DATA_REQUEST             0x7a
+#define MT_SAPI_RESET_FACTORY               0x70 // add by mo
+#define MT_SAPI_GET_DEV_ALL_INFO_REQ        0x71 // add by mo
+#define MT_SAPI_WRITE_LOGICAL_TYPE          0x72 // add by mo
+
 /* AREQ to host */
 #define MT_SAPI_START_CNF                   0x80
 #define MT_SAPI_BIND_CNF                    0x81
@@ -399,9 +398,6 @@ extern "C"
 #define MT_SAPI_FIND_DEV_CNF                0x85
 #define MT_SAPI_DEV_INFO_RSP                0x86
 #define MT_SAPI_RCV_DATA_IND                0x87
-// by mo
-#define MT_SAPI_RESET_IND                   0xf0
-#define MT_SAPI_AF_INCOMING_MSG             0xfa
 
 /***************************************************************************************************
  * UTIL COMMANDS

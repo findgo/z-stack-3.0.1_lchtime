@@ -210,7 +210,6 @@ uint8 MT_AfCommandProcessing(uint8 *pBuf)
 
   switch (pBuf[MT_RPC_POS_CMD1])
   {
-#if  !defined(MT_USER_BY_MO)
     case MT_AF_REGISTER:
       MT_AfRegister(pBuf);
       break;
@@ -251,7 +250,7 @@ uint8 MT_AfCommandProcessing(uint8 *pBuf)
     case MT_AF_APSF_CONFIG_GET:
       MT_AfAPSF_ConfigGet(pBuf);
       break;
-#endif
+
     default:
       status = MT_RPC_ERR_COMMAND_ID;
       break;
@@ -334,6 +333,7 @@ static void MT_AfDelete(uint8 *pBuf)
  ***************************************************************************************************/
 static void MT_AfDataRequest(uint8 *pBuf)
 {
+#if  !defined(MT_USER_BY_MO)
   #define MT_AF_REQ_MSG_LEN  10
   #define MT_AF_REQ_MSG_EXT  10
 
@@ -453,6 +453,95 @@ static void MT_AfDataRequest(uint8 *pBuf)
   {
     MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP|(uint8)MT_RPC_SYS_AF), cmd1, 1, &retValue);
   }
+#else
+#define MT_USER_BY_MOREQ_MSG_LEN  2 // 两字节地址
+    
+    endPointDesc_t *epDesc;
+    afAddrType_t dstAddr;
+    cId_t cId;
+    uint8 transId, txOpts, radius;
+    uint8 cmd0, cmd1;
+    uint8 retValue = ZFailure;
+    uint16 dataLen, tempLen;
+    
+    tempLen = pBuf[MT_RPC_POS_LEN]; // mt的数据域长度
+    /* Parse header */
+    cmd0 = pBuf[MT_RPC_POS_CMD0];
+    cmd1 = pBuf[MT_RPC_POS_CMD1];
+    pBuf += MT_RPC_FRAME_HDR_SZ;
+    
+    
+    /* Destination address */
+    dstAddr.addrMode = afAddr16Bit;
+    dstAddr.addr.shortAddr = osal_build_uint16( pBuf );
+    pBuf += 2;
+    
+    /* Destination endpoint */
+    dstAddr.endPoint = LCHTIMEAPP_ENDPOINT;
+    dstAddr.panId = 0;
+    
+    /* Source endpoint */
+    epDesc = afFindEndPointDesc(LCHTIMEAPP_ENDPOINT);
+    
+    /* ClusterId */
+    cId = LCHTIMEAPP_CLUSTERID;
+    
+    /* TransId */
+    transId = 0x00;
+    
+    /* TxOption */
+    txOpts = AF_EN_SECURITY;
+    
+    /* Radius */
+    radius = AF_DEFAULT_RADIUS;
+    
+    dataLen = tempLen - MT_USER_BY_MOREQ_MSG_LEN; // 真实数据域长度
+    
+    if ( epDesc == NULL )
+    {
+      retValue = afStatus_INVALID_PARAMETER;
+    }
+    else if (tempLen > (uint16)MT_RPC_DATA_MAX)
+    {
+      if (pMtAfDataReq != NULL)
+      {
+        retValue = afStatus_INVALID_PARAMETER;
+      }
+      else if ((pMtAfDataReq = osal_mem_alloc(sizeof(mtAfDataReq_t) + dataLen)) == NULL)
+      {
+        retValue = afStatus_MEM_FAIL;
+      }
+      else
+      {
+        retValue = afStatus_SUCCESS;
+    
+        pMtAfDataReq->data = (uint8 *)(pMtAfDataReq+1);
+        (void)osal_memcpy(&(pMtAfDataReq->dstAddr), &dstAddr, sizeof(afAddrType_t));
+        pMtAfDataReq->epDesc = epDesc;
+        pMtAfDataReq->cId = cId;
+        pMtAfDataReq->dataLen = dataLen;
+        pMtAfDataReq->transId = transId;
+        pMtAfDataReq->txOpts = txOpts;
+        pMtAfDataReq->radius = radius;
+    
+        // Setup to time-out the huge outgoing item if host does not MT_AF_DATA_STORE it.
+        pMtAfDataReq->tick = MT_AF_EXEC_CNT;
+        if (ZSuccess != osal_start_timerEx(MT_TaskID, MT_AF_EXEC_EVT, MT_AF_EXEC_DLY))
+        {
+          (void)osal_set_event(MT_TaskID, MT_AF_EXEC_EVT);
+        }
+      }
+    }
+    else
+    {
+      retValue = AF_DataRequest(&dstAddr, epDesc, cId, dataLen, pBuf, &transId, txOpts, radius);
+    }
+    
+    if (MT_RPC_CMD_SREQ == (cmd0 & MT_RPC_CMD_TYPE_MASK))
+    {
+      MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP|(uint8)MT_RPC_SYS_SAPI), cmd1, 1, &retValue);
+    }
+#endif
 }
 
 #if defined( ZIGBEEPRO )
@@ -761,7 +850,7 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
   *pTmp++ = pMsg->wasBroadcast;
 
   /* LinkQuality */
-  *pTmp++ = pMsg->LinkQuality;
+  *pTmp++ = pMsg->rssi;
 
   /* SecurityUse */
   *pTmp++ = pMsg->SecurityUse;
@@ -826,7 +915,7 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
 
   uint16 dataLen = pMsg->cmd.DataLength;  // Length of the data section in the response packet.
   uint16 respLen = MT_USER_BY_MOINC_MSG_LEN + dataLen;
-  uint8 cmd = MT_SAPI_AF_INCOMING_MSG;
+  uint8 cmd = MT_AF_INCOMING_MSG;
   uint8 *pRsp, *pTmp;
 
   if ((pMsg->srcAddr.addrMode == afAddr64Bit) ||
@@ -1043,97 +1132,6 @@ static void MT_AfAPSF_ConfigGet(uint8 *pBuf)
 
   MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP | (uint8)MT_RPC_SYS_AF),
                                        MT_AF_APSF_CONFIG_GET, 3, buf );
-}
-
-void MT_SapiAfDataRequest(uint8 *pBuf)
-{
-  #define MT_USER_BY_MOREQ_MSG_LEN  2 // 两字节地址
-
-  endPointDesc_t *epDesc;
-  afAddrType_t dstAddr;
-  cId_t cId;
-  uint8 transId, txOpts, radius;
-  uint8 cmd0, cmd1;
-  uint8 retValue = ZFailure;
-  uint16 dataLen, tempLen;
-
-  tempLen = pBuf[MT_RPC_POS_LEN]; // mt的数据域长度
-  /* Parse header */
-  cmd0 = pBuf[MT_RPC_POS_CMD0];
-  cmd1 = pBuf[MT_RPC_POS_CMD1];
-  pBuf += MT_RPC_FRAME_HDR_SZ;
-
-
-  /* Destination address */
-  dstAddr.addrMode = afAddr16Bit;
-  dstAddr.addr.shortAddr = osal_build_uint16( pBuf );
-  pBuf += 2;
-  
-  /* Destination endpoint */
-  dstAddr.endPoint = LCHTIMEAPP_ENDPOINT;
-  dstAddr.panId = 0;
-
-  /* Source endpoint */
-  epDesc = afFindEndPointDesc(LCHTIMEAPP_ENDPOINT);
-
-  /* ClusterId */
-  cId = LCHTIMEAPP_CLUSTERID;
-
-  /* TransId */
-  transId = 0x00;
-
-  /* TxOption */
-  txOpts = AF_EN_SECURITY;
-
-  /* Radius */
-  radius = AF_DEFAULT_RADIUS;
-
-  dataLen = tempLen - MT_USER_BY_MOREQ_MSG_LEN; // 真实数据域长度
-
-  if ( epDesc == NULL )
-  {
-    retValue = afStatus_INVALID_PARAMETER;
-  }
-  else if (tempLen > (uint16)MT_RPC_DATA_MAX)
-  {
-    if (pMtAfDataReq != NULL)
-    {
-      retValue = afStatus_INVALID_PARAMETER;
-    }
-    else if ((pMtAfDataReq = osal_mem_alloc(sizeof(mtAfDataReq_t) + dataLen)) == NULL)
-    {
-      retValue = afStatus_MEM_FAIL;
-    }
-    else
-    {
-      retValue = afStatus_SUCCESS;
-
-      pMtAfDataReq->data = (uint8 *)(pMtAfDataReq+1);
-      (void)osal_memcpy(&(pMtAfDataReq->dstAddr), &dstAddr, sizeof(afAddrType_t));
-      pMtAfDataReq->epDesc = epDesc;
-      pMtAfDataReq->cId = cId;
-      pMtAfDataReq->dataLen = dataLen;
-      pMtAfDataReq->transId = transId;
-      pMtAfDataReq->txOpts = txOpts;
-      pMtAfDataReq->radius = radius;
-
-      // Setup to time-out the huge outgoing item if host does not MT_AF_DATA_STORE it.
-      pMtAfDataReq->tick = MT_AF_EXEC_CNT;
-      if (ZSuccess != osal_start_timerEx(MT_TaskID, MT_AF_EXEC_EVT, MT_AF_EXEC_DLY))
-      {
-        (void)osal_set_event(MT_TaskID, MT_AF_EXEC_EVT);
-      }
-    }
-  }
-  else
-  {
-    retValue = AF_DataRequest(&dstAddr, epDesc, cId, dataLen, pBuf, &transId, txOpts, radius);
-  }
-
-  if (MT_RPC_CMD_SREQ == (cmd0 & MT_RPC_CMD_TYPE_MASK))
-  {
-    MT_BuildAndSendZToolResponse(((uint8)MT_RPC_CMD_SRSP|(uint8)MT_RPC_SYS_SAPI), cmd1, 1, &retValue);
-  }
 }
 
 /***************************************************************************************************
