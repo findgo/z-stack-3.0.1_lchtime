@@ -1468,9 +1468,9 @@
                     <state>NV_INIT</state>
                     <state>NV_RESTORE</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
-                    <state>xZAPP_P1</state>
                     <state>ISR_KEYINTERRUPT</state>
                     <state>HAL_ADC=FALSE</state>
+                    <state>xZAPP_P1</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -2616,12 +2616,12 @@
                     <state>TC_LINKKEY_JOIN</state>
                     <state>NV_INIT</state>
                     <state>NV_RESTORE</state>
-                    <state>xPOWER_SAVING</state>
                     <state>NWK_AUTO_POLL</state>
                     <state>MULTICAST_ENABLED=FALSE</state>
-                    <state>xZAPP_P1</state>
                     <state>ISR_KEYINTERRUPT</state>
                     <state>HAL_ADC=FALSE</state>
+                    <state>xPOWER_SAVING</state>
+                    <state>xZAPP_P1</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -3542,7 +3542,7 @@
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchlink.c</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchlink.h</name>
+            <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchLink.h</name>
         </file>
         <file>
             <name>$PROJ_DIR$\..\..\..\..\..\Components\stack\bdb\bdb_touchlink_initiator.c</name>
