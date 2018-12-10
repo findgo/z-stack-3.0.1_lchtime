@@ -74,8 +74,8 @@ int bxNwk_LowDataRequest(uint16_t dstaddr,uint8_t *dat, uint16_t len)
         return ( ZInvalidParameter ); // EMBEDDED RETURN
     }
 
-    if(dstaddr == 0x0000)
-        options |= AF_EN_SECURITY;
+//    if(dstaddr == 0x0000)
+//        options |= AF_EN_SECURITY;
 
     return AF_DataRequest( &afdstddr, epDesc, LCHTIMEAPP_CLUSTERID, len, dat, 0, options, AF_DEFAULT_RADIUS );
 }
