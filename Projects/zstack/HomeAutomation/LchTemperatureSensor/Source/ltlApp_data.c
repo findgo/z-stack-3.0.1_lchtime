@@ -60,7 +60,7 @@ void TemperatureSensorReport(void)
       reportList->dataType = TemperatureAttriList[0].dataType;
       reportList->attrData = TemperatureAttriList[0].dataPtr;
             
-      ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, TEMP_NODE, 0, LTL_FRAMECTL_DIR_CLIENT_SERVER, TRUE, reportCmd);
+      ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, TEMP_NODE, 0, TRUE, reportCmd);
 
       reportCmd->numAttr = 1;
       reportList = &(reportCmd->attrList[0]);
@@ -68,7 +68,7 @@ void TemperatureSensorReport(void)
       reportList->dataType = HumidityAttriList[0].dataType;
       reportList->attrData = HumidityAttriList[0].dataPtr;      
 
-      ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, HUMI_NODE, 0, LTL_FRAMECTL_DIR_CLIENT_SERVER, TRUE, reportCmd);
+      ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, HUMI_NODE, 0, TRUE, reportCmd);
 
       mo_free(reportCmd);
   } 
