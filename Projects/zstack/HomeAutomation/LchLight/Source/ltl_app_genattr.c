@@ -170,7 +170,7 @@ void ReportProductID(void)
         reportList->dataType = LTL_DATATYPE_UINT32;
         reportList->attrData = (uint8_t *)&productID;
         
-        ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, LTL_FRAMECTL_DIR_SERVER_CLIENT, TRUE, reportCmd);
+        ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, TRUE, reportCmd);
         mo_free(reportCmd);
     }
 }

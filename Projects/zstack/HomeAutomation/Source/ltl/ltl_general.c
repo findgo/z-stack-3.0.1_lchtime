@@ -86,29 +86,26 @@ static LStatus_t ltlGeneral_ProcessSpecificInbasic( ltlApduMsg_t *ApduMsg , ltlG
 {
     uint32_t tmpvalue;
 
-    if(ltl_ServerCmd(ApduMsg->hdr.fc.direction)){
+    switch( ApduMsg->hdr.commandID ){
+    case COMMAND_BASIC_RESET_FACT_DEFAULT:
+        if(pCB->pfnBasicResetFact)
+            pCB->pfnBasicResetFact(ApduMsg->hdr.nodeNo);
+        break;
         
-        switch( ApduMsg->hdr.commandID ){
-        case COMMAND_BASIC_RESET_FACT_DEFAULT:
-            if(pCB->pfnBasicResetFact)
-                pCB->pfnBasicResetFact(ApduMsg->hdr.nodeNo);
-            break;
-            
-        case COMMAND_BASIC_REBOOT_DEVICE:
-            if(pCB->pfnBasicReboot)
-                pCB->pfnBasicReboot();
-            break;
-            
-        case COMMAND_BASIC_IDENTIFY:
-            tmpvalue = BUILD_UINT16(ApduMsg->pdata[0], ApduMsg->pdata[1]);
-            if(pCB->pfnIdentify)
-                pCB->pfnIdentify((uint16_t)tmpvalue);
-            break;
-            
-        default:
-            return LTL_STATUS_FAILURE;
-            //break;
-        }
+    case COMMAND_BASIC_REBOOT_DEVICE:
+        if(pCB->pfnBasicReboot)
+            pCB->pfnBasicReboot();
+        break;
+        
+    case COMMAND_BASIC_IDENTIFY:
+        tmpvalue = BUILD_UINT16(ApduMsg->pdata[0], ApduMsg->pdata[1]);
+        if(pCB->pfnIdentify)
+            pCB->pfnIdentify((uint16_t)tmpvalue);
+        break;
+        
+    default:
+        return LTL_STATUS_FAILURE;
+        //break;
     }
 
     return LTL_STATUS_SUCCESS;
@@ -122,14 +119,12 @@ static LStatus_t ltlGeneral_ProcessSpecificInbasic( ltlApduMsg_t *ApduMsg , ltlG
  */
 static LStatus_t ltlGeneral_ProcessSpecificInonoff( ltlApduMsg_t *ApduMsg, ltlGeneral_AppCallbacks_t *pCB)
 {
-    if(ltl_ServerCmd(ApduMsg->hdr.fc.direction)){
-        if(ApduMsg->hdr.commandID > COMMAND_ONOFF_TOGGLE){
-            return LTL_STATUS_FAILURE;
-        }
-        else{
-            if(pCB->pfnOnoff)
-                pCB->pfnOnoff(ApduMsg->hdr.nodeNo, ApduMsg->hdr.commandID);
-        }
+    if(ApduMsg->hdr.commandID > COMMAND_ONOFF_TOGGLE){
+        return LTL_STATUS_FAILURE;
+    }
+    else{
+        if(pCB->pfnOnoff)
+            pCB->pfnOnoff(ApduMsg->hdr.nodeNo, ApduMsg->hdr.commandID);
     }
 
     return LTL_STATUS_SUCCESS;
@@ -151,48 +146,46 @@ static LStatus_t ltlGeneral_ProcessSpecificInLevelControl( ltlApduMsg_t *ApduMsg
         ltlLCStep_t lcS;
     }cmd;
     
-    if(ltl_ServerCmd(ApduMsg->hdr.fc.direction)){
-        switch (ApduMsg->hdr.commandID){
-        case COMMAND_LEVEL_MOVE_TO_LEVEL_WITH_ON_OFF:
-            withOnOff = TRUE;
-        case COMMAND_LEVEL_MOVE_TO_LEVEL:
-            if(pCB->pfnLevelControlMoveToLevel){
-                cmd.LCMTL.withOnOff = withOnOff;
-                cmd.LCMTL.level = ApduMsg->pdata[0];
-                pCB->pfnLevelControlMoveToLevel(ApduMsg->hdr.nodeNo, &(cmd.LCMTL));
-            }
-            break;
-
-        case COMMAND_LEVEL_MOVE_WITH_ON_OFF:
-            withOnOff = TRUE;
-        case COMMAND_LEVEL_MOVE:
-            if(pCB->pfnLevelControlMove){
-                cmd.lcM.withOnOff = withOnOff;
-                cmd.lcM.moveMode = ApduMsg->pdata[0];           
-                cmd.lcM.rate = ApduMsg->pdata[1];
-                pCB->pfnLevelControlMove(ApduMsg->hdr.nodeNo, &(cmd.lcM));
-            }
-            break;
-        case COMMAND_LEVEL_STEP_WITH_ON_OFF:
-            withOnOff = TRUE;
-        case COMMAND_LEVEL_STEP:
-            if(pCB->pfnLevelControlStep){
-                cmd.lcS.withOnOff = withOnOff;
-                cmd.lcS.stepMode = ApduMsg->pdata[0];           
-                cmd.lcS.stepSize = ApduMsg->pdata[1];
-                pCB->pfnLevelControlStep(ApduMsg->hdr.nodeNo, &(cmd.lcS));
-            }
-            break;
-
-        case COMMAND_LEVEL_STOP_WITH_ON_OFF:
-        case COMMAND_LEVEL_STOP:
-            if(pCB->pfnLevelControlStop)
-                pCB->pfnLevelControlStop(ApduMsg->hdr.nodeNo);
-            break;
-        
-        default:
-            return LTL_STATUS_FAILURE;
+    switch (ApduMsg->hdr.commandID){
+    case COMMAND_LEVEL_MOVE_TO_LEVEL_WITH_ON_OFF:
+        withOnOff = TRUE;
+    case COMMAND_LEVEL_MOVE_TO_LEVEL:
+        if(pCB->pfnLevelControlMoveToLevel){
+            cmd.LCMTL.withOnOff = withOnOff;
+            cmd.LCMTL.level = ApduMsg->pdata[0];
+            pCB->pfnLevelControlMoveToLevel(ApduMsg->hdr.nodeNo, &(cmd.LCMTL));
         }
+        break;
+
+    case COMMAND_LEVEL_MOVE_WITH_ON_OFF:
+        withOnOff = TRUE;
+    case COMMAND_LEVEL_MOVE:
+        if(pCB->pfnLevelControlMove){
+            cmd.lcM.withOnOff = withOnOff;
+            cmd.lcM.moveMode = ApduMsg->pdata[0];           
+            cmd.lcM.rate = ApduMsg->pdata[1];
+            pCB->pfnLevelControlMove(ApduMsg->hdr.nodeNo, &(cmd.lcM));
+        }
+        break;
+    case COMMAND_LEVEL_STEP_WITH_ON_OFF:
+        withOnOff = TRUE;
+    case COMMAND_LEVEL_STEP:
+        if(pCB->pfnLevelControlStep){
+            cmd.lcS.withOnOff = withOnOff;
+            cmd.lcS.stepMode = ApduMsg->pdata[0];           
+            cmd.lcS.stepSize = ApduMsg->pdata[1];
+            pCB->pfnLevelControlStep(ApduMsg->hdr.nodeNo, &(cmd.lcS));
+        }
+        break;
+
+    case COMMAND_LEVEL_STOP_WITH_ON_OFF:
+    case COMMAND_LEVEL_STOP:
+        if(pCB->pfnLevelControlStop)
+            pCB->pfnLevelControlStop(ApduMsg->hdr.nodeNo);
+        break;
+    
+    default:
+        return LTL_STATUS_FAILURE;
     }
 
 

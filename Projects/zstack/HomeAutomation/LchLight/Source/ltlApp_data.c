@@ -70,7 +70,7 @@ void LightAttriInit(void)
 #endif
 }
 
-#define LightReportStatus(nodeNO, reportCmd) ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, nodeNO, 0, LTL_FRAMECTL_DIR_SERVER_CLIENT, TRUE, reportCmd);
+#define LightReportStatus(nodeNO, reportCmd) ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_ONOFF, nodeNO, 0, TRUE, reportCmd);
 
 void LigthApp_OnOffUpdate(uint8_t nodeNO, uint8_t cmd)
 {
