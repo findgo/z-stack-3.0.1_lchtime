@@ -983,7 +983,7 @@ LStatus_t ltl_SendWriteRsp(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, ui
     ltlWriteRspStatus_t *statusRec;
 
     // calculate the size of the command
-    len = writeRspCmd->numAttr * sizeof(1 + 2); //status + attribute id
+    len = writeRspCmd->numAttr * (1 + 2); //status + attribute id
     
     buf = mo_malloc( len );
     if ( buf == NULL ){
