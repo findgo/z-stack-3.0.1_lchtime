@@ -911,7 +911,7 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
 
   (void)osal_mem_free(pRsp);
 #else
-  #define MT_USER_BY_MOINC_MSG_LEN  2 // 源地址两字节
+  #define MT_USER_BY_MOINC_MSG_LEN  3 // 源地址 + 是否广播 3字节
 
   uint16 dataLen = pMsg->cmd.DataLength;  // Length of the data section in the response packet.
   uint16 respLen = MT_USER_BY_MOINC_MSG_LEN + dataLen;
@@ -935,7 +935,8 @@ void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
     /* Source Address */
   *pTmp++ = LO_UINT16(pMsg->srcAddr.addr.shortAddr);
   *pTmp++ = HI_UINT16(pMsg->srcAddr.addr.shortAddr);
-
+  *pTmp++ = pMsg->wasBroadcast;
+  
   /* Data */
   (void)osal_memcpy(pTmp, pMsg->cmd.Data, dataLen);
 
