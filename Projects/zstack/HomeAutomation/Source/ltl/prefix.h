@@ -23,9 +23,9 @@ typedef struct
 //uint8_t *ltlPrefixBuildHdr( uint8_t *pAddr, uint8_t *pDat );
 //uint8_t ltlPrefixrequest(uint8_t *pDat, uint16_t buflen);
 // 提供网络帧头长度
-#define ltlprefixHdrsize(dstAddr) bxNwkHdrLen()
+#define ltlprefixHdrsize(dstAddr) 0
 // 填充网络帧头
-#define ltlPrefixBuildHdr(dstAddr, pDat ) bxNwkBuildHdr(pDat, NWK_FC_DATA , dstAddr, 0)
+#define ltlPrefixBuildHdr(dstAddr, pDat )  pDat
 // 直接发送
 #define ltlPrefixrequest(dstAddr,pDat, buflen) bxNwk_LowDataRequest(dstAddr, pDat, buflen);  
 
