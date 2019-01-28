@@ -25,16 +25,12 @@
 #define LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED      0x03
 #define LTL_CMD_WRITE_ATTRIBUTES_RSP            0x04
 #define LTL_CMD_WRITE_ATTRIBUTES_NORSP          0x05
-#define LTL_CMD_CONFIGURE_REPORTING             0x06 // 读写 报告配置未实现
+#define LTL_CMD_CONFIGURE_REPORTING             0x06 
 #define LTL_CMD_CONFIGURE_REPORTING_RSP         0x07
 #define LTL_CMD_READ_CONFIGURE_REPORTING        0x08
 #define LTL_CMD_READ_CONFIGURE_REPORTING_RSP    0x09
 #define LTL_CMD_REPORT_ATTRIBUTES               0x0a
 #define LTL_CMD_DEFAULT_RSP                     0x0b
-#define LTL_CMD_READ_ATTRIBUTES_STRUCTURED      0x0c // 结构型未实现
-#define LTL_CMD_READ_ATTRIBUTES_STRUCTURED_RSP  0x0d
-#define LTL_CMD_WRITE_ATTRIBUTES_STRUCTURED     0x0e
-#define LTL_CMD_WRITE_ATTRIBUTES_STRUCTURED_RSP 0x0f
 #define LTL_CMD_PROFILE_MAX                     LTL_CMD_DEFAULT_RSP
 
 /*** Data Types (32) ***/
@@ -56,55 +52,41 @@
 #define LTL_DATATYPE_ENUM16                             0x3b
 #define LTL_DATATYPE_SINGLE_PREC                        0x3c
 #define LTL_DATATYPE_DOUBLE_PREC                        0x3d
-#define LTL_DATATYPE_OCTET_ARRAY                        0x41
-#define LTL_DATATYPE_CHAR_STR                           0x42
-#define LTL_DATATYPE_LONG_OCTET_ARRAY                   0x43
-#define LTL_DATATYPE_LONG_CHAR_STR                      0x44
-#define LTL_DATATYPE_ARRAY                              0x51
-#define LTL_DATATYPE_TRUNK_ID                           0x52
-#define LTL_DATATYPE_ATTR_ID                            0x53
-#define LTL_DATATYPE_SN_ADDR                            0x54
-#define LTL_DATATYPE_128_BIT_SEC_KEY                    0x55
+#define LTL_DATATYPE_CHAR_STR                           0x41
+#define LTL_DATATYPE_OCTET_ARRAY                        0x42
+#define LTL_DATATYPE_DWORD_ARRAY                        0x43
+#define LTL_DATATYPE_SN_ADDR                            0x51
+#define LTL_DATATYPE_128_BIT_SEC_KEY                    0x52
 #define LTL_DATATYPE_UNKNOWN                            0xff
 
 /*** Error Status Codes ***/
 #define LTL_STATUS_SUCCESS                              0x00 //操作成功
 #define LTL_STATUS_FAILURE                              0x01 //操作失败
-// 0x02-0x7D are reserved.
-#define LTL_STATUS_NOT_AUTHORIZED                       0x7E // 未授权
+// 0x02-0x7E are reserved.
 #define LTL_STATUS_MALFORMED_COMMAND                    0x80
 #define LTL_STATUS_UNSUP_TRUNK_COMMAND                  0x81  //不支持集下命令
 #define LTL_STATUS_UNSUP_GENERAL_COMMAND                0x82   //不支持profile下的通用标准命令
-//#define LTL_STATUS_UNSUP_MANU_TRUNK_COMMAND             0x83  // 不支持集下的制造商命令
-//#define LTL_STATUS_UNSUP_MANU_GENERAL_COMMAND           0x84  // 不支持profile下制造商的命令
-#define LTL_STATUS_INVALID_FIELD                        0x85  // 域无效,一般表现为发送的值域对设备无影响
-#define LTL_STATUS_UNSUPPORTED_ATTRIBUTE                0x86  //不支持的属性
-#define LTL_STATUS_INVALID_VALUE                        0x87  // 无效数值
-#define LTL_STATUS_READ_ONLY                            0x88   // 只读
-#define LTL_STATUS_NOT_FOUND                            0x8a  //请求的信息没有找到
-#define LTL_STATUS_UNREPORTABLE_ATTRIBUTE               0x8b  // 这个属性不能定期报告
-#define LTL_STATUS_INVALID_DATA_TYPE                    0x8c    //无效数据类型
-#define LTL_STATUS_WRITE_ONLY                           0x8d   //只写
-#define LTL_STATUS_DEFINED_OUT_OF_BAND                  0x8e   // 写的数据超过范围
-#define LTL_STATUS_INCONSISTENT                         0x8f
-#define LTL_STATUS_ACTION_DENIED                        0x90  // 拒绝此命令动作
-#define LTL_STATUS_TIMEOUT                              0x91  //超时
-#define LTL_STATUS_ABORT                                0x92  //停止
-//#define LTL_STATUS_INVALID_IMAGE                        0x96  //无效镜像
-//#define LTL_STATUS_WAIT_FOR_DATA                        0x97  //等待数据
-//#define LTL_STATUS_NO_IMAGE_AVAILABLE                   0x98  // 没有有效的镜像
-//#define LTL_STATUS_REQUIRE_MORE_IMAGE                   0x99  //请求更多的镜像
-#define LTL_STATUS_HARDWARE_FAILURE                     0xc0  // 硬件问题错误
-#define LTL_STATUS_SOFTWARE_FAILURE                     0xc1  // 软件错误
-// 0xc3-0xff are reserved.
+#define LTL_STATUS_INVALID_FIELD                        0x83  // 域无效,一般表现为发送的值域对设备无影响
+#define LTL_STATUS_UNSUPPORTED_ATTRIBUTE                0x84  //不支持的属性
+#define LTL_STATUS_INVALID_VALUE                        0x85  // 无效数值
+#define LTL_STATUS_READ_ONLY                            0x86   // 只读
+#define LTL_STATUS_NOT_FOUND                            0x87  //请求的信息没有找到
+#define LTL_STATUS_UNREPORTABLE_ATTRIBUTE               0x88  // 这个属性不能定期报告
+#define LTL_STATUS_INVALID_DATA_TYPE                    0x89    //无效数据类型
+#define LTL_STATUS_WRITE_ONLY                           0x8a   //只写
+#define LTL_STATUS_DEFINED_OUT_OF_BAND                  0x8b   // 写的数据超过范围
+#define LTL_STATUS_INCONSISTENT                         0x8c
+#define LTL_STATUS_ACTION_DENIED                        0x8d  // 拒绝此命令动作
+#define LTL_STATUS_TIMEOUT                              0x8e  //超时
+#define LTL_STATUS_ABORT                                0x8f  //停止
+#define LTL_STATUS_HARDWARE_FAILURE                     0x90  // 硬件问题错误
+#define LTL_STATUS_SOFTWARE_FAILURE                     0x91  // 软件错误
+// 0xa0-0xff are reserved.
 #define LTL_STATUS_CMD_HAS_RSP                          0xff
 
 /*** Attribute Access Control - bit masks ***/
 #define ACCESS_CONTROL_READ                             0x01
 #define ACCESS_CONTROL_WRITE                            0x02
-#define ACCESS_CONTROL_COMMAND                          0x04
-#define ACCESS_CONTROL_AUTH_READ                        0x10
-#define ACCESS_CONTROL_AUTH_WRITE                       0x20
 
 // Used by ltlReadWriteCB_t callback function
 #define LTL_OPER_LEN                                    0x00 // Get length of attribute value to be read
@@ -119,9 +101,6 @@
 
 // 对于应用层的数据类型的一些 字节串 字符串 数组进行定义预留长度
 #define OCTET_CHAR_HEADROOM_LEN         (1) // length : 1
-#define OCTET_CHAR_LONG_HEADROOM_LEN    (2) // length : 2
-#define ARRAY_HEADROOM_LEN              (2) // element type + number of element : 1 +　1
-
 
 /*********************************************************************
  * MACROS
@@ -373,7 +352,7 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
  * @return      LTL_SUCCESS if successful. LTL_FAILURE, otherwise.
  */
 LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWriteCB_t pfnReadWriteCB );
-
+uint8_t ltlIsAnalogDataType( uint8_t dataType );
 uint8_t ltlGetDataTypeLength( uint8_t dataType );
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData );
 
@@ -402,6 +381,9 @@ LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, 
 
 LStatus_t ltl_SendDefaultRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum, ltlDefaultRspCmd_t *defaultRspCmd);
 
+#define ltl_SendSpecificCmd(dstAddr,trunkID,nodeNO,seqNum,disableDefaultRsp,cmd,cmdFormat,cmdFormatLen) ltl_SendCommand(dstAddr, trunkID,nodeNO,seqNum,TRUE, disableDefaultRsp,cmd,cmdFormat,cmdFormatLen)
+
+
 void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
 
 
@@ -409,7 +391,5 @@ uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlA
 
 
 void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen );
-void ltl_LongStrToAppString(char *pRawStr, char *pAppStr, uint16_t Applen );
 
 #endif
-#include "prefix.h"
