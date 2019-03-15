@@ -25,7 +25,8 @@ static const uint16_t hwver = HW_VERSION;
 static char manufactTab[OCTET_CHAR_HEADROOM_LEN + MANUFACTURER_NAME_STRING_MAX_LEN];
 static uint32_t buildDateCode;
 static const uint32_t productID = PRODUCT_IDENTIFIER;
-static uint8_t serialnumberTab[16];
+static uint8_t AppSerialnumberTab[16 + OCTET_CHAR_HEADROOM_LEN] = {16};
+static uint8_t *pSerialnumberTab = ltl_AppArraytoArray(&AppSerialnumberTab);
 static const uint8_t powersrc = POWERSOURCE_DC;
 
 
@@ -68,9 +69,9 @@ static const ltlAttrRec_t GeneralBasicAttriList[] = {
     },
     {
         ATTRID_BASIC_SERIAL_NUMBER,
-        LTL_DATATYPE_SN_ADDR,
+        LTL_DATATYPE_UINT8_ARRAY,
         ACCESS_CONTROL_READ,
-        (void *)&serialnumberTab
+        (void *)&AppSerialnumberTab
     },
     {
         ATTRID_BASIC_POWER_SOURCE,
@@ -98,8 +99,8 @@ void ltl_GeneralBasicAttriInit(void)
     ltl_StrToAppString(MANUFACTURER_NAME, manufactTab, sizeof(manufactTab));
     buildDateCode = mver_getminorver(); 
     // serialnumber  
-    memset(serialnumberTab, 0, sizeof(serialnumberTab));
-    memcpy(serialnumberTab, NLME_GetExtAddr(), Z_EXTADDR_LEN);
+    memset(pSerialnumberTab, 0, sizeof(pSerialnumberTab));
+    memcpy(pSerialnumberTab, NLME_GetExtAddr(), Z_EXTADDR_LEN);
 
     // Register the application's attribute list
     ltl_registerAttrList(LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO,

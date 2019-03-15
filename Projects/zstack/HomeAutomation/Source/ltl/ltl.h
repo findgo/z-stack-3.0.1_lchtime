@@ -31,33 +31,31 @@
 #define LTL_CMD_READ_CONFIGURE_REPORTING_RSP    0x09
 #define LTL_CMD_REPORT_ATTRIBUTES               0x0a
 #define LTL_CMD_DEFAULT_RSP                     0x0b
-#define LTL_CMD_PROFILE_MAX                     LTL_CMD_DEFAULT_RSP
+#define LTL_CMD_PROFILE_MAX                     LTL_CMD_DEFAULT_RSP + 1
 
 /*** Data Types (32) ***/
-#define LTL_DATATYPE_NO_DATA                            0x00
-#define LTL_DATATYPE_BOOLEAN                            0x10
-#define LTL_DATATYPE_BITMAP8                            0x15
-#define LTL_DATATYPE_BITMAP16                           0x16
-#define LTL_DATATYPE_BITMAP32                           0x17
-#define LTL_DATATYPE_BITMAP64                           0x18
-#define LTL_DATATYPE_UINT8                              0x25
-#define LTL_DATATYPE_UINT16                             0x26
-#define LTL_DATATYPE_UINT32                             0x27
-#define LTL_DATATYPE_UINT64                             0x28
-#define LTL_DATATYPE_INT8                               0x35
-#define LTL_DATATYPE_INT16                              0x36
-#define LTL_DATATYPE_INT32                              0x37
-#define LTL_DATATYPE_INT64                              0x38
-#define LTL_DATATYPE_ENUM8                              0x3a
-#define LTL_DATATYPE_ENUM16                             0x3b
-#define LTL_DATATYPE_SINGLE_PREC                        0x3c
-#define LTL_DATATYPE_DOUBLE_PREC                        0x3d
-#define LTL_DATATYPE_CHAR_STR                           0x41
-#define LTL_DATATYPE_OCTET_ARRAY                        0x42
-#define LTL_DATATYPE_DWORD_ARRAY                        0x43
-#define LTL_DATATYPE_SN_ADDR                            0x51
-#define LTL_DATATYPE_128_BIT_SEC_KEY                    0x52
-#define LTL_DATATYPE_UNKNOWN                            0xff
+#define LTL_DATATYPE_BOOLEAN                            0x00
+#define LTL_DATATYPE_INT8                               0x01
+#define LTL_DATATYPE_INT16                              0x02
+#define LTL_DATATYPE_INT32                              0x03
+#define LTL_DATATYPE_INT64                              0x04
+#define LTL_DATATYPE_UINT8                              0x05
+#define LTL_DATATYPE_UINT16                             0x06
+#define LTL_DATATYPE_UINT32                             0x07
+#define LTL_DATATYPE_UINT64                             0x08
+#define LTL_DATATYPE_SINGLE_PREC                        0x09
+#define LTL_DATATYPE_DOUBLE_PREC                        0x0a
+#define LTL_DATATYPE_CHAR_STR                           0x0b
+#define LTL_DATATYPE_INT8_ARRAY                         0x0c
+#define LTL_DATATYPE_INT16_ARRAY                        0x0d
+#define LTL_DATATYPE_INT32_ARRAY                        0x0e
+#define LTL_DATATYPE_INT64_ARRAY                        0x0f
+#define LTL_DATATYPE_UINT8_ARRAY                        0x10
+#define LTL_DATATYPE_UINT16_ARRAY                       0x11
+#define LTL_DATATYPE_UINT32_ARRAY                       0x12
+#define LTL_DATATYPE_UINT64_ARRAY                       0x13
+#define LTL_DATATYPE_UNKNOWN                            0x14
+
 
 /*** Error Status Codes ***/
 #define LTL_STATUS_SUCCESS                              0x00 //操作成功
@@ -352,8 +350,13 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
  * @return      LTL_SUCCESS if successful. LTL_FAILURE, otherwise.
  */
 LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWriteCB_t pfnReadWriteCB );
+uint8_t ltlIsValidDataType (uint8_t dataType );
+uint8_t ltlIsBaseDataType( uint8_t dataType);
+uint8_t ltlIsComplexDataType(uint8_t dataType);
 uint8_t ltlIsAnalogDataType( uint8_t dataType );
-uint8_t ltlGetDataTypeLength( uint8_t dataType );
+uint8_t ltlGetBaseDataTypeLength( uint8_t dataType );
+uint8_t ltlIsAnalogDataType( uint8_t dataType );
+
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData );
 
 LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
@@ -391,5 +394,6 @@ uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlA
 
 
 void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen );
+#define ltl_AppArraytoArray(pAppArray)  ((void *)(((uint8_t *)pAppArray) + 1))
 
 #endif
