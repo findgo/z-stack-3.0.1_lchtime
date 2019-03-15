@@ -19,11 +19,15 @@
 
 // Commands that have corresponding responses
 #define LTL_PROFILE_CMD_HAS_RSP( cmd )  ( (cmd) == LTL_CMD_READ_ATTRIBUTES            || \
+                                        (cmd) == LTL_CMD_READ_ATTRIBUTES_RSP        || \
                                         (cmd) == LTL_CMD_WRITE_ATTRIBUTES           || \
                                         (cmd) == LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED || \
+                                        (cmd) == LTL_CMD_WRITE_ATTRIBUTES_RSP       || \
                                         (cmd) == LTL_CMD_WRITE_ATTRIBUTES_NORSP || \
                                         (cmd) == LTL_CMD_CONFIGURE_REPORTING   || \
+                                        (cmd) == LTL_CMD_CONFIGURE_REPORTING_RSP || \
                                         (cmd) == LTL_CMD_READ_CONFIGURE_REPORTING || \
+                                        (cmd) == LTL_CMD_READ_CONFIGURE_REPORTING_RSP || \
                                         (cmd) == LTL_CMD_DEFAULT_RSP ) // exception
 
 /* local typedef */
@@ -61,7 +65,7 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
 static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr,uint8_t *pDat);
 static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, uint8_t specific, uint8_t disableDefaultRsp,uint8_t cmd);
 static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat );
-static uint8_t ltlHdrSize(ltlFrameHdr_t *hdr);
+static uint8_t ltlHdrSize(void);
 static ltlLibPlugin_t *ltlFindPlugin( uint16_t trunkID );
 static ltlAttrRecsList_t *ltlFindAttrRecsList(uint16_t trunkID, uint8_t nodeNO);
 
@@ -267,7 +271,7 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     
     ltlEncodeHdr(&hdr, trunkID, nodeNO, seqNum, specific, disableDefaultRsp, cmd);
 
-    msglen = ltlHdrSize(&hdr);
+    msglen = ltlHdrSize();
 
     //获得前置预留长度
     prefixlen = ltlprefixHdrsize(dstAddr);
@@ -382,7 +386,7 @@ static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat )
  *
  * @return      size of head
  */
-static uint8_t ltlHdrSize(ltlFrameHdr_t *hdr)
+static uint8_t ltlHdrSize(void)
 {
     return (2 + 1 + 1 + 1 + 1); //trunkID + seqnum + nodeNO + frame control + cmdID;
 }
@@ -462,31 +466,7 @@ uint8_t ltlFindAttrRec( uint16_t trunkID,  uint8_t nodeNO, uint16_t attrId, ltlA
     
     return FALSE;
 }
-uint8_t ltlIsAnalogDataType( uint8_t dataType )
-{
-    uint8_t isanalog;
 
-    switch ( dataType ){
-    case LTL_DATATYPE_UINT8:
-    case LTL_DATATYPE_UINT16:
-    case LTL_DATATYPE_UINT32:
-    case LTL_DATATYPE_UINT64:
-    case LTL_DATATYPE_INT8:
-    case LTL_DATATYPE_INT16:
-    case LTL_DATATYPE_INT32:
-    case LTL_DATATYPE_INT64:
-    case LTL_DATATYPE_SINGLE_PREC:
-    case LTL_DATATYPE_DOUBLE_PREC:
-      isanalog = TRUE;
-      break;
-
-    default:
-      isanalog = FALSE;
-      break;
-    }
-
-    return ( isanalog );
-}
 /*
  * @brief   Verifies endianness in system.
  *
@@ -516,7 +496,7 @@ static void ltl_BuildAnalogData( uint8_t dataType, uint8_t *pData, uint8_t *pBuf
     int bytes;
     int step;
 
-    bytes = ltlGetDataTypeLength( dataType);
+    bytes = ltlGetBaseDataTypeLength( dataType);
   
     // decide if move forward or backwards to copy data
     if ( ltlIsLittleEndianMachine() ) {
@@ -534,6 +514,43 @@ static void ltl_BuildAnalogData( uint8_t dataType, uint8_t *pData, uint8_t *pBuf
     }
 }
 
+
+uint8_t ltlIsValidDataType (uint8_t dataType )
+{
+    if (dataType < LTL_DATATYPE_UNKNOWN){
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+uint8_t ltlIsBaseDataType( uint8_t dataType)
+{
+    if (dataType <= LTL_DATATYPE_DOUBLE_PREC){
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+uint8_t ltlIsComplexDataType(uint8_t dataType)
+{
+    if ((dataType >= LTL_DATATYPE_CHAR_STR) && (dataType < LTL_DATATYPE_UNKNOWN)){
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+uint8_t ltlIsAnalogDataType( uint8_t dataType )
+{
+    if (ltlIsBaseDataType( dataType) && dataType != LTL_DATATYPE_BOOLEAN){
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 /*********************************************************************
  * @brief   Find the base data type length that matchs the dataType 获取基本数据类型的数据长度
  *
@@ -541,49 +558,34 @@ static void ltl_BuildAnalogData( uint8_t dataType, uint8_t *pData, uint8_t *pBuf
  *
  * @return  length of data type
  */
-uint8_t ltlGetDataTypeLength( uint8_t dataType )
+uint8_t ltlGetBaseDataTypeLength( uint8_t dataType )
 {
-    uint8_t len;
+    uint8_t len = 0;
 
     switch ( dataType ){
         case LTL_DATATYPE_BOOLEAN:
-        case LTL_DATATYPE_BITMAP8:
         case LTL_DATATYPE_UINT8:
         case LTL_DATATYPE_INT8:
-        case LTL_DATATYPE_ENUM8:
             len = 1;
             break;
 
-        case LTL_DATATYPE_BITMAP16:
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
-        case LTL_DATATYPE_ENUM16:
             len = 2;
             break;
 
-        case LTL_DATATYPE_BITMAP32:
         case LTL_DATATYPE_UINT32:
         case LTL_DATATYPE_INT32:
         case LTL_DATATYPE_SINGLE_PREC:
             len = 4;
             break;
-        case LTL_DATATYPE_BITMAP64:           
         case LTL_DATATYPE_UINT64:
         case LTL_DATATYPE_INT64:
         case LTL_DATATYPE_DOUBLE_PREC:
             len = 8;
             break;
-        
-        case LTL_DATATYPE_SN_ADDR:
-        case LTL_DATATYPE_128_BIT_SEC_KEY:
-            len = 16;
-            break;
 
-        case LTL_DATATYPE_NO_DATA:
-        case LTL_DATATYPE_UNKNOWN:
-        // Fall through
-
-        default:
+        default: //LTL_DATATYPE_UNKNOWN
             len = 0;
         break;
     }
@@ -601,11 +603,11 @@ uint8_t ltlGetDataTypeLength( uint8_t dataType )
  */
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData )
 {
-    if ( dataType == LTL_DATATYPE_CHAR_STR || dataType == LTL_DATATYPE_OCTET_ARRAY || dataType == LTL_DATATYPE_DWORD_ARRAY){
+    if (ltlIsComplexDataType( dataType)){
         return ( *pData + OCTET_CHAR_HEADROOM_LEN); // 1 for length field
     }
     
-    return ltlGetDataTypeLength( dataType );
+    return ltlGetBaseDataTypeLength( dataType );
 }
 
 /*********************************************************************
@@ -624,22 +626,17 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
 
     switch ( dataType ){
         case LTL_DATATYPE_BOOLEAN:
-        case LTL_DATATYPE_BITMAP8:
         case LTL_DATATYPE_INT8:
         case LTL_DATATYPE_UINT8:
-        case LTL_DATATYPE_ENUM8:
             *buf++ = *((uint8_t *)attrData);
             break;
 
-        case LTL_DATATYPE_BITMAP16:
         case LTL_DATATYPE_UINT16:
         case LTL_DATATYPE_INT16:
-        case LTL_DATATYPE_ENUM16:
             *buf++ = LO_UINT16( *((uint16_t *)attrData) );
             *buf++ = HI_UINT16( *((uint16_t *)attrData) );
             break;
 
-        case LTL_DATATYPE_BITMAP32:
         case LTL_DATATYPE_UINT32:
         case LTL_DATATYPE_INT32:
         case LTL_DATATYPE_SINGLE_PREC:
@@ -649,45 +646,39 @@ static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf
             *buf++ = BREAK_UINT32( *((uint32_t *)attrData), 3 );
             break;
 
-        case LTL_DATATYPE_BITMAP64:           
         case LTL_DATATYPE_UINT64:
         case LTL_DATATYPE_INT64:
         case LTL_DATATYPE_DOUBLE_PREC:
             pStr = (uint8_t *)attrData;
             buf = memcpy( buf, pStr, 8 );
-        /*
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 0 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 1 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 2 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 3 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 4 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 5 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 6 );
-            *buf++ = BREAK_UINT64( *((uint64_t *)attrData), 7 );
-        */
             break;
 
         case LTL_DATATYPE_CHAR_STR:
-        case LTL_DATATYPE_OCTET_ARRAY:
+        case LTL_DATATYPE_UINT8_ARRAY:
+        case LTL_DATATYPE_INT8_ARRAY:
             pStr = (uint8_t *)attrData;
             len = *pStr;
             buf = memcpy( buf, pStr, len + 1 ); // Including length field
             break;
             
-        case LTL_DATATYPE_DWORD_ARRAY:
+        case LTL_DATATYPE_UINT16_ARRAY:
+        case LTL_DATATYPE_INT16_ARRAY:
             pStr = (uint8_t *)attrData;
             len = *pStr * 2;
             buf = memcpy( buf, pStr, len + 1 ); // Including length field
             break;
-            
-        case LTL_DATATYPE_SN_ADDR:
-        case LTL_DATATYPE_128_BIT_SEC_KEY:
-            
+        case LTL_DATATYPE_UINT32_ARRAY:
+        case LTL_DATATYPE_INT32_ARRAY:
             pStr = (uint8_t *)attrData;
-            buf = memcpy( buf, pStr, 16 );
+            len = *pStr * 4;
+            buf = memcpy( buf, pStr, len + 1 ); // Including length field
+            break;         
+        case LTL_DATATYPE_UINT64_ARRAY:
+        case LTL_DATATYPE_INT64_ARRAY:
+            pStr = (uint8_t *)attrData;
+            len = *pStr * 8;
+            buf = memcpy( buf, pStr, len + 1 ); // Including length field
             break;
-
-        case LTL_DATATYPE_NO_DATA:
         case LTL_DATATYPE_UNKNOWN:
         // Fall through
 
@@ -1063,7 +1054,7 @@ LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t no
         dataLen += 2 + 1 + 2; // Attribute ID + Data Type + Min
         // Find out the size of the Reportable Change field (for Analog data types)
         if ( ltlIsAnalogDataType( reportRec->dataType ) ) {
-            dataLen += ltlGetDataTypeLength( reportRec->dataType );
+            dataLen += ltlGetBaseDataTypeLength( reportRec->dataType );
         }
 
     }
@@ -1186,7 +1177,7 @@ LStatus_t ltl_SendReadReportCfgRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t n
             dataLen += 1 + 2; // Data Type + Min
             // Find out the size of the Reportable Change field (for Analog data types)
             if ( ltlIsAnalogDataType( reportRspRec->dataType ) ) {
-                dataLen += ltlGetDataTypeLength( reportRspRec->dataType );
+                dataLen += ltlGetBaseDataTypeLength( reportRspRec->dataType );
             }
         }
     }
@@ -1511,7 +1502,7 @@ static void *ltlParseInConfigReportCmd(uint8_t *pdata ,uint16_t datalen)
   
         // For attributes of 'discrete' data types this field is omitted
         if ( ltlIsAnalogDataType( dataType ) ){
-            reportChangeLen = ltlGetDataTypeLength( dataType );
+            reportChangeLen = ltlGetBaseDataTypeLength( dataType );
             pBuf += reportChangeLen;
     
             // add padding if needed
@@ -1553,7 +1544,7 @@ static void *ltlParseInConfigReportCmd(uint8_t *pdata ,uint16_t datalen)
             ltl_BuildAnalogData( reportRec->dataType, dataPtr, pBuf);
             reportRec->reportableChange = dataPtr;
     
-            reportChangeLen = ltlGetDataTypeLength( reportRec->dataType );
+            reportChangeLen = ltlGetBaseDataTypeLength( reportRec->dataType );
             pBuf += reportChangeLen;
     
             // advance attribute data pointer
@@ -1671,7 +1662,7 @@ static void *ltlParseInReadReportCfgRspCmd(uint8_t *pdata ,uint16_t datalen)
     
             // For attributes of 'discrete' data types this field is omitted
             if ( ltlIsAnalogDataType( dataType ) ) {
-                reportChangeLen = ltlGetDataTypeLength( dataType );
+                reportChangeLen = ltlGetBaseDataTypeLength( dataType );
                 pBuf += reportChangeLen;
       
                 // add padding if needed
@@ -1711,7 +1702,7 @@ static void *ltlParseInReadReportCfgRspCmd(uint8_t *pdata ,uint16_t datalen)
                  ltl_BuildAnalogData( reportRspRec->dataType, dataPtr, pBuf);
                  reportRspRec->reportableChange = dataPtr;
      
-                 reportChangeLen = ltlGetDataTypeLength( reportRspRec->dataType );
+                 reportChangeLen = ltlGetBaseDataTypeLength( reportRspRec->dataType );
                  pBuf += reportChangeLen;
      
                  // advance attribute data pointer
@@ -2169,7 +2160,7 @@ void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt)
     ltlDefaultRspCmd_t defaultRspCmd;
 
     //error no apdu payload
-    if(pkt->apduLength == 0){
+    if(pkt->apduLength < ltlHdrSize()){
         return;
     }
 
@@ -2182,7 +2173,7 @@ void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt)
     // process frame head    
     //foundation type message in profile 标准命令
     if(ltl_IsProfileCmd(ApduMsg.hdr.fc.type)){
-        if((ApduMsg.hdr.commandID <= LTL_CMD_PROFILE_MAX) && (ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile != NULL)){
+        if((ApduMsg.hdr.commandID < LTL_CMD_PROFILE_MAX) && (ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile != NULL)){
             // parse foundation corresponding command 
             ApduMsg.attrCmd = ltlCmdTable[ApduMsg.hdr.commandID].pfnParseInProfile(ApduMsg.pdata,ApduMsg.datalen);
             
