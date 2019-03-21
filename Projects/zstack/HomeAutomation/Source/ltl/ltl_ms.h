@@ -5,77 +5,55 @@
 #include "ltl.h"
 
 /*****************************************************************************/
-/***    Illuminance Measurement Cluster Attributes                         ***/
+/***    光照测量集id                                                            ***/
 /*****************************************************************************/
     // Illuminance Measurement Information attribute set
 #define ATTRID_MS_ILLUMINANCE_MEASURED_VALUE                             0x0000
 #define ATTRID_MS_ILLUMINANCE_MIN_MEASURED_VALUE                         0x0001
 #define ATTRID_MS_ILLUMINANCE_MAX_MEASURED_VALUE                         0x0002
 #define ATTRID_MS_ILLUMINANCE_TOLERANCE                                  0x0003
-#define ATTRID_MS_ILLUMINANCE_LIGHT_SENSOR_TYPE                          0x0004
-    // Illuminance Measurement Settings attribute set
-// #define ATTRID_MS_ILLUMINANCE_MIN_PERCENT_CHANGE                         0x0100
-// #define ATTRID_MS_ILLUMINANCE_MIN_ABSOLUTE_CHANGE                        0x0101
-  /*** Light Sensor Type attribute values ***/
-#define MS_ILLUMINANCE_LIGHT_SENSOR_PHOTODIODE                           0x00
-#define MS_ILLUMINANCE_LIGHT_SENSOR_CMOS                                 0x01
-#define MS_ILLUMINANCE_LIGHT_SENSOR_UNKNOWN                              0xFF
-  
+
 /*****************************************************************************/
-/***    Illuminance Level Sensing Configuration Cluster Attributes         ***/
+/***    光照水平感知配置集                                                          ***/
 /*****************************************************************************/
     // Illuminance Level Sensing Information attribute set
 #define ATTRID_MS_ILLUMINANCE_LEVEL_STATUS                               0x0000
-#define ATTRID_MS_ILLUMINANCE_LEVEL_LIGHT_SENSOR_TYPE                    0x0001
 /***  Level Status attribute values  ***/
 #define MS_ILLUMINANCE_LEVEL_ON_TARGET                                   0x00
 #define MS_ILLUMINANCE_LEVEL_BELOW_TARGET                                0x01
 #define MS_ILLUMINANCE_LEVEL_ABOVE_TARGET                                0x02
-/***  Light Sensor Type attribute values  ***/
-#define MS_ILLUMINANCE_LEVEL_LIGHT_SENSOR_PHOTODIODE                     0x00
-#define MS_ILLUMINANCE_LEVEL_LIGHT_SENSOR_CMOS                           0x01
-#define MS_ILLUMINANCE_LEVEL_LIGHT_SENSOR_UNKNOWN                        0xFF
     // Illuminance Level Sensing Settings attribute set
 #define ATTRID_MS_ILLUMINANCE_TARGET_LEVEL                               0x0010
 
 /*****************************************************************************/
-/***    Temperature Measurement Cluster Attributes                         ***/
+/***    温度测量集                                                              ***/
 /*****************************************************************************/
   // Temperature Measurement Information attributes set
 #define ATTRID_MS_TEMPERATURE_MEASURED_VALUE                             0x0000
 #define ATTRID_MS_TEMPERATURE_MIN_MEASURED_VALUE                         0x0001
 #define ATTRID_MS_TEMPERATURE_MAX_MEASURED_VALUE                         0x0002
 #define ATTRID_MS_TEMPERATURE_TOLERANCE                                  0x0003
-  // Temperature Measurement Settings attributes set
-#define ATTRID_MS_TEMPERATURE_MIN_PERCENT_CHANGE                         0x0010
-#define ATTRID_MS_TEMPERATURE_MIN_ABSOLUTE_CHANGE                        0x0011
 
 /*****************************************************************************/
-/***    Pressure Measurement Cluster Attributes                            ***/
+/***    压力测量集                                                              ***/
 /*****************************************************************************/
   // Pressure Measurement Information attribute set
 #define ATTRID_MS_PRESSURE_MEASUREMENT_MEASURED_VALUE                    0x0000
 #define ATTRID_MS_PRESSURE_MEASUREMENT_MIN_MEASURED_VALUE                0x0001
 #define ATTRID_MS_PRESSURE_MEASUREMENT_MAX_MEASURED_VALUE                0x0002
 #define ATTRID_MS_PRESSURE_MEASUREMENT_TOLERANCE                         0x0003
-  // Pressure Measurement Settings attribute set
-// #define ATTRID_MS_PRESSURE_MEASUREMENT_MIN_PERCENT_CHANGE                0x0100
-// #define ATTRID_MS_PRESSURE_MEASUREMENT_MIN_ABSOLUTE_CHANGE               0x0101
 
 /*****************************************************************************/
-/***        Flow Measurement Cluster Attributes                            ***/
+/***        流量测量集                                                          ***/
 /*****************************************************************************/
   // Flow Measurement Information attribute set
 #define ATTRID_MS_FLOW_MEASUREMENT_MEASURED_VALUE                        0x0000
 #define ATTRID_MS_FLOW_MEASUREMENT_MIN_MEASURED_VALUE                    0x0001
 #define ATTRID_MS_FLOW_MEASUREMENT_MAX_MEASURED_VALUE                    0x0002
 #define ATTRID_MS_FLOW_MEASUREMENT_TOLERANCE                             0x0003
-  // Flow Measurement Settings attribute set
-// #define ATTRID_MS_FLOW_MEASUREMENT_MIN_PERCENT_CHANGE                    0x0100
-// #define ATTRID_MS_FLOW_MEASUREMENT_MIN_ABSOLUTE_CHANGE                   0x0101
 
 /*****************************************************************************/
-/***        Relative Humidity Cluster Attributes                           ***/
+/***        相对湿度测量集                                                        ***/
 /*****************************************************************************/
   // Relative Humidity Information attribute set
 #define ATTRID_MS_RELATIVE_HUMIDITY_MEASURED_VALUE                       0x0000
@@ -84,15 +62,10 @@
 #define ATTRID_MS_RELATIVE_HUMIDITY_TOLERANCE                            0x0003
 
 /*****************************************************************************/
-/***         Occupancy Sensing Cluster Attributes                          ***/
+/***         占有率                                                           ***/
 /*****************************************************************************/
     // Occupancy Sensor Configuration attribute set
 #define ATTRID_MS_OCCUPANCY_SENSING_CONFIG_OCCUPANCY                     0x0000
-#define ATTRID_MS_OCCUPANCY_SENSING_CONFIG_OCCUPANCY_SENSOR_TYPE         0x0001
-/*** Occupancy Sensor Type Attribute values ***/
-#define MS_OCCUPANCY_SENSOR_TYPE_PIR                                     0x00
-#define MS_OCCUPANCY_SENSOR_TYPE_ULTRASONIC                              0x01
-#define MS_OCCUPANCY_SENSOR_TYPE_PIR_AND_ULTRASONIC                      0x02
     // PIR Configuration attribute set
 #define ATTRID_MS_OCCUPANCY_SENSING_CONFIG_PIR_O_TO_U_DELAY              0x0010
 #define ATTRID_MS_OCCUPANCY_SENSING_CONFIG_PIR_U_TO_O_DELAY              0x0011
