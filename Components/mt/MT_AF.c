@@ -752,7 +752,7 @@ void MT_AfReflectError(afReflectError_t *pMsg)
 void MT_AfIncomingMsg(afIncomingMSGPacket_t *pMsg)
 {
 #if  !defined(MT_USER_BY_MO)
-  #define MT_AF_INC_MSG_LEN  20
+  #define MT_AF_INC_MSG_LEN  17//20
   #define MT_AF_INC_MSG_EXT  10
 
   uint16 dataLen = pMsg->cmd.DataLength;  // Length of the data section in the response packet.
