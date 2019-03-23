@@ -1056,7 +1056,6 @@ LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t no
         if ( ltlIsAnalogDataType( reportRec->dataType ) ) {
             dataLen += ltlGetBaseDataTypeLength( reportRec->dataType );
         }
-
     }
 
     buf = mo_malloc( dataLen );

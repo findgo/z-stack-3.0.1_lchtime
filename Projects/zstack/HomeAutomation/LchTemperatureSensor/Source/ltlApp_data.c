@@ -49,8 +49,8 @@ void TemperatureSensorReport(void)
   SHT2x_Measure(TRIG_TEMP_MEASUREMENT_POLL);//获取SHT20 温度
   SHT2x_Measure(TRIG_HUMI_MEASUREMENT_POLL);//获取SHT20 湿度
   info = SHT2x_GetInfo();
-  temperature = (uint16_t)info->TEMP *100;
-  humidity = (uint16_t)info->HUMI*100;
+  temperature = (uint16_t)(info->TEMP *100);
+  humidity = (uint16_t)(info->HUMI*100);
   
   reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
   if(reportCmd){

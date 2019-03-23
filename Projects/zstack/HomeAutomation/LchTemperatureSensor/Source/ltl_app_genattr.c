@@ -2,11 +2,12 @@
 
 #include "ltl_app_genattr.h"
 
-#define APPL_VERSION ((APPL_MAJOR_VERSION << 13) | (APPL_MINOR_VERSION << 8) \
-                        | (APPL_FIXED_VERSION << 3) | APPL_BETA_VERSION)
+#define APPL_VERSION ((APPL_BETA_VERSION << 15) | (APPL_MAJOR_VERSION << 10)  \
+                                                | (APPL_MINOR_VERSION << 4)| APPL_FIXED_VERSION )
+                        
+#define HW_VERSION ((HW_BETA_VERSION << 15)| (HW_MAJOR_VERSION << 10)  \
+                                                | (HW_MINOR_VERSION << 4) | HW_FIXED_VERSION  )
 
-#define HW_VERSION ((HW_MAJOR_VERSION << 13) | (HW_MINOR_VERSION << 8) \
-                        | (HW_FIXED_VERSION << 3) | HW_BETA_VERSION)
 
 //local function
 static uint32_t mver_getminorver(void);
