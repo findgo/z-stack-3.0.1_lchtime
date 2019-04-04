@@ -157,26 +157,3 @@ static void GenIdentify( uint16_t identifyTime )
 }
 
 
-void ReportProductID(void)
-{
-    ltlReportCmd_t *reportCmd;
-    ltlReport_t *reportList;
-    uint8_t i;
-    uint8_t num;
-    
-    num = UBOUND(GeneralBasicAttriList);
-
-    reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * num );
-    if(reportCmd){
-        reportList = &(reportCmd->attrList[0]);
-        for( i = 0; i < num ; i++){
-            reportList->attrID = GeneralBasicAttriList[i].attrId;
-            reportList->dataType = GeneralBasicAttriList[i].dataType;
-            reportList->attrData = (uint8_t *)GeneralBasicAttriList[i].dataPtr;
-            reportList++;
-        }
-        reportCmd->numAttr = num;
-        ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, TRUE, reportCmd);
-        mo_free(reportCmd);
-    }
-}
