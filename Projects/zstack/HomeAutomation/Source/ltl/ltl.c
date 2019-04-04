@@ -1056,7 +1056,6 @@ LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t no
         if ( ltlIsAnalogDataType( reportRec->dataType ) ) {
             dataLen += ltlGetBaseDataTypeLength( reportRec->dataType );
         }
-
     }
 
     buf = mo_malloc( dataLen );
@@ -1854,12 +1853,12 @@ static void *ltlParseInDefaultRspCmd(uint8_t *pdata ,uint16_t datalen)
         statusRec = &(readRspCmd->attrList[i]);
 
         statusRec->attrID = readCmd->attrID[i];
-
         // find this device attribute record
         if ( ltlFindAttrRec( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, readCmd->attrID[i], &attrRec ) ){ 
             if ( ltl_AccessCtrlRead( attrRec.accessControl ) ) {
-               statusRec->data = attrRec.dataPtr; // get the attribute pointer
+               statusRec->status = LTL_STATUS_SUCCESS; // set success
                statusRec->dataType = attrRec.dataType; // get the attribute data type
+               statusRec->data = attrRec.dataPtr; // get the attribute pointer
             }
             else{
                 statusRec->status = LTL_STATUS_WRITE_ONLY;

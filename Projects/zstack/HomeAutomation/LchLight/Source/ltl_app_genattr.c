@@ -2,11 +2,11 @@
 
 #include "ltl_app_genattr.h"
 
-#define APPL_VERSION ((APPL_MAJOR_VERSION << 13) | (APPL_MINOR_VERSION << 8) \
-                        | (APPL_FIXED_VERSION << 3) | APPL_BETA_VERSION)
-
-#define HW_VERSION ((HW_MAJOR_VERSION << 13) | (HW_MINOR_VERSION << 8) \
-                        | (HW_FIXED_VERSION << 3) | HW_BETA_VERSION)
+#define APPL_VERSION ((APPL_BETA_VERSION << 15) | (APPL_MAJOR_VERSION << 10)  \
+                                                | (APPL_MINOR_VERSION << 4)| APPL_FIXED_VERSION )
+                        
+#define HW_VERSION ((HW_BETA_VERSION << 15)| (HW_MAJOR_VERSION << 10)  \
+                                                | (HW_MINOR_VERSION << 4) | HW_FIXED_VERSION  )
 
 //local function
 static uint32_t mver_getminorver(void);
@@ -158,20 +158,3 @@ static void GenIdentify( uint16_t identifyTime )
 }
 
 
-void ReportProductID(void)
-{
-    ltlReportCmd_t *reportCmd;
-    ltlReport_t *reportList;
-
-    reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
-    if(reportCmd){
-        reportCmd->numAttr = 1;
-        reportList = &(reportCmd->attrList[0]);
-        reportList->attrID = ATTRID_BASIC_PRODUCT_ID;
-        reportList->dataType = LTL_DATATYPE_UINT32;
-        reportList->attrData = (uint8_t *)&productID;
-        
-        ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_GENERAL_BASIC, LTL_DEVICE_COMMON_NODENO, 0, TRUE, reportCmd);
-        mo_free(reportCmd);
-    }
-}

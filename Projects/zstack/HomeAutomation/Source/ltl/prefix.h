@@ -25,7 +25,7 @@ typedef struct
 // 提供网络帧头长度
 #define ltlprefixHdrsize(dstAddr) 0
 // 填充网络帧头
-#define ltlPrefixBuildHdr(dstAddr, pDat ) pDat
+#define ltlPrefixBuildHdr(dstAddr, pDat )  pDat
 // 直接发送
 #define ltlPrefixrequest(dstAddr,pDat, buflen) bxNwk_LowDataRequest(dstAddr, pDat, buflen);  
 

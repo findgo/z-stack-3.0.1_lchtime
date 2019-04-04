@@ -32,7 +32,7 @@
 // applition minor version 5 bits ,max 31
 #define HW_MINOR_VERSION      ( 0 )
 // applition fixed version 5 bits, max 31
-#define HW_FIXED_VERSION      ( 0 )
+#define HW_FIXED_VERSION      ( 1 )
 // applition beta version 3 bits, max 7
 // if release set 0
 #define HW_BETA_VERSION        ( 1 )
@@ -41,12 +41,9 @@
 #define MANUFACTURER_NAME  "lchtime"
 
 // product identifier
-#define PRODUCT_IDENTIFIER    ( 10000 )
+#define PRODUCT_IDENTIFIER    ( 20001 )
 
 
 void ltl_GeneralBasicAttriInit(void);
-void ReportProductID(void);
-
-
 
 #endif

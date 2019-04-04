@@ -453,7 +453,6 @@ static void ltlApp_NetUpdate(uint8_t isOnNet)
 #endif
         ltlApp_OnNet = TRUE;
         HalLedSet(HAL_LED_1, HAL_LED_MODE_OFF);
-        ReportProductID();
     }
     else{
         ltlApp_OnNet = FALSE;
