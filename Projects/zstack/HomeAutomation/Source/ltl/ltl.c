@@ -4,14 +4,13 @@
 #include "memalloc.h"
 #include "prefix.h"
 
-
-
 /*********************************************************************
  * MACROS
  */
 /*** Frame Control ***/
-#define ltl_FCType( a )               ( (a) & LTL_FRAMECTL_TYPE_MASK )
-#define ltl_FCDisableDefaultRsp( a )  ( (a) & LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK )
+#define ltl_FCType( a )                 ( (a) & LTL_FRAMECTL_TYPE_MASK )
+#define ltl_FCDisableDefaultRsp( a )    ( (a) & LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK )
+#define ltl_FCDirection(a)              ( (a) & LTL_FRAMECTL_DIRECTION_MASK ) 
 
 /*** Attribute Access Control ***/
 #define ltl_AccessCtrlRead( a )       ( (a) & ACCESS_CONTROL_READ )
@@ -31,7 +30,6 @@
                                         (cmd) == LTL_CMD_DEFAULT_RSP ) // exception
 
 /* local typedef */
-
 typedef void *(*ltlParseInProfileCmd_t)( uint8_t *pdata,uint16_t datalen );
 typedef uint8_t (*ltlProcessInProfileCmd_t)( ltlApduMsg_t *ApduMsg );
 
@@ -63,7 +61,7 @@ typedef struct
 // local function
 static uint8_t *ltlSerializeData( uint8_t dataType, void *attrData, uint8_t *buf );
 static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr,uint8_t *pDat);
-static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, uint8_t specific, uint8_t disableDefaultRsp,uint8_t cmd);
+static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, uint8_t specific, uint8_t dir, uint8_t disableDefaultRsp,uint8_t cmd);
 static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat );
 static uint8_t ltlHdrSize(void);
 static ltlLibPlugin_t *ltlFindPlugin( uint16_t trunkID );
@@ -102,12 +100,12 @@ static const ltlCmdItems_t ltlCmdTable[] =
     {ltlParseInWriteCmd, ltlProcessInWriteUndividedCmd},//LTL_CMD_WRITE_ATTRIBUTES_UNDIVIDED
     {NULL/*ltlParseInWriteRspCmd*/, NULL},              //LTL_CMD_WRITE_ATTRIBUTES_RSP
     {ltlParseInWriteCmd, ltlProcessInWriteCmd},         //LTL_CMD_WRITE_ATTRIBUTES_NORSP
-    {NULL/*ltlParseInConfigReportCmd*/, NULL},           //LTL_CMD_CONFIGURE_REPORTING
+    {ltlParseInConfigReportCmd, NULL},           //LTL_CMD_CONFIGURE_REPORTING
     {NULL/*ltlParseInConfigReportRspCmd*/, NULL},       //LTL_CMD_CONFIGURE_REPORTING_RSP
-    {NULL/*ltlParseInReadReportCfgCmd*/, NULL},         //LTL_CMD_READ_CONFIGURE_REPORTING
+    {ltlParseInReadReportCfgCmd, NULL},         //LTL_CMD_READ_CONFIGURE_REPORTING
     {NULL/*ltlParseInReadReportCfgRspCmd*/, NULL},      //LTL_CMD_READ_CONFIGURE_REPORTING_RSP
     {NULL/*ltlParseInReportCmd*/, NULL},                //LTL_CMD_REPORT_ATTRIBUTES
-    {NULL/*ltlParseInDefaultRspCmd*/, NULL},            //LTL_CMD_DEFAULT_RSP                          
+    {ltlParseInDefaultRspCmd, NULL},            //LTL_CMD_DEFAULT_RSP                          
 };
 
 /*********************************************************************
@@ -120,14 +118,14 @@ static const ltlCmdItems_t ltlCmdTable[] =
  * @return      0 if OK
  */
 // ok
-LStatus_t ltl_registerPlugin(uint16_t starttrunkID,uint16_t endtrunkID,ltlSpecificTrunckHdCB_t pfnSpecificTrunkHdCB)
+LStatus_t ltl_registerPlugin(uint16_t starttrunkID, uint16_t endtrunkID, ltlSpecificTrunckHdCB_t pfnSpecificTrunkHdCB)
 {
     ltlLibPlugin_t *pNewItem;
     ltlLibPlugin_t *pLoop;
 
     // Fill in the new profile list
     pNewItem = mo_malloc( sizeof( ltlLibPlugin_t ) );
-    if ( pNewItem == NULL ){
+    if ( !pNewItem ){
         return LTL_MEMERROR;
     }
 
@@ -176,7 +174,7 @@ LStatus_t ltl_registerAttrList(uint16_t trunkID, uint8_t nodeNO, uint8_t numAttr
 
     // Fill in the new profile list
     pNewItem = mo_malloc( sizeof( ltlAttrRecsList_t ) );
-    if ( pNewItem == NULL){
+    if ( !pNewItem ){
         return LTL_MEMERROR;
     }
 
@@ -227,13 +225,12 @@ LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWrite
 {
     ltlAttrRecsList_t *pRec = ltlFindAttrRecsList(trunkID, nodeNO);
 
-    if ( pRec != NULL ){
-        pRec->pfnReadWriteCB = pfnReadWriteCB;
-
-        return ( LTL_SUCCESS );
+    if ( !pRec ){
+        return ( LTL_FAILURE );
     }
-
-    return ( LTL_FAILURE );
+    
+    pRec->pfnReadWriteCB = pfnReadWriteCB;
+    return ( LTL_SUCCESS );
 }
 
 /*********************************************************************
@@ -257,7 +254,7 @@ LStatus_t ltl_registerReadWriteCB(uint16_t trunkID, uint8_t nodeNO, ltlReadWrite
  * @return  LTL_STATUS_SUCCESS if OK
  */
 LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific, uint8_t disableDefaultRsp,
+                                uint8_t specific,uint8_t dir, uint8_t disableDefaultRsp,
                                 uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen)
 {
     ltlFrameHdr_t hdr;
@@ -267,12 +264,10 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     uint16_t prefixlen;
     LStatus_t status;
     
-    memset((uint8_t *)&hdr,0,sizeof(ltlFrameHdr_t));
-    
-    ltlEncodeHdr(&hdr, trunkID, nodeNO, seqNum, specific, disableDefaultRsp, cmd);
+    memset((uint8_t *)&hdr,0,sizeof(ltlFrameHdr_t));  
+    ltlEncodeHdr(&hdr, trunkID, nodeNO, seqNum, specific, dir, disableDefaultRsp, cmd);
 
     msglen = ltlHdrSize();
-
     //获得前置预留长度
     prefixlen = ltlprefixHdrsize(dstAddr);
     msglen += prefixlen + cmdFormatLen;
@@ -281,8 +276,8 @@ LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint
     if(!msgbuf){
         return LTL_MEMERROR;
     }
-    pbuf = msgbuf;
     
+    pbuf = msgbuf;
     //填充前置预留空间
     pbuf = ltlPrefixBuildHdr(dstAddr, pbuf);
     pbuf = ltlBuildHdr(&hdr, pbuf);
@@ -312,6 +307,7 @@ static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr, uint8_t *pDat)
 
     hdr->fc.type = ltl_FCType(*pDat);
     hdr->fc.disableDefaultRsp = ltl_FCDisableDefaultRsp(*pDat) ? LTL_FRAMECTL_DIS_DEFAULT_RSP_ON : LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF;
+    hdr->fc.dir = ltl_FCDirection(*pDat) ? LTL_FRAMECTL_CLIENT_SERVER_DIR : LTL_FRAMECTL_SERVER_CLIENT_DIR;
     pDat++;
 
     hdr->commandID = *pDat++;
@@ -327,14 +323,13 @@ static uint8_t *ltlParseHdr(ltlFrameHdr_t *hdr, uint8_t *pDat)
  * @param   seqNum -
  * @param   specific -
  * @param   direction -
- * @param   manuCode -
  * @param   disableDefaultRsp -
  * @param   cmd -
  *
  * @return  no
  */
 static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific, uint8_t disableDefaultRsp,uint8_t cmd)
+                                uint8_t specific,uint8_t dir,uint8_t disableDefaultRsp,uint8_t cmd)
 {
     // trunkID
     hdr->trunkID = trunkID;  
@@ -344,10 +339,10 @@ static void ltlEncodeHdr( ltlFrameHdr_t *hdr,uint16_t trunkID,uint8_t nodeNO,uin
     hdr->transSeqNum = seqNum;
     // Add the Trunk's command ID
     hdr->commandID = cmd;
-    
     // Build the Frame Control byte
     hdr->fc.type = specific ? LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC : LTL_FRAMECTL_TYPE_PROFILE;
-    hdr->fc.disableDefaultRsp=  disableDefaultRsp ? LTL_FRAMECTL_DIS_DEFAULT_RSP_ON : LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF;
+    hdr->fc.disableDefaultRsp =  disableDefaultRsp ? LTL_FRAMECTL_DIS_DEFAULT_RSP_ON : LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF;
+    hdr->fc.dir = dir ? LTL_FRAMECTL_CLIENT_SERVER_DIR : LTL_FRAMECTL_SERVER_CLIENT_DIR;
 }
 
 /*********************************************************************
@@ -370,6 +365,7 @@ static uint8_t *ltlBuildHdr( ltlFrameHdr_t *hdr, uint8_t *pDat )
     // Build the Frame Control byte
     *pDat = hdr->fc.type;
     *pDat |= hdr->fc.disableDefaultRsp << 2;
+    *pDat |= hdr->fc.dir << 3;
     pDat++;  // move past the frame control field
     
     // Add the Trunk's command ID
@@ -722,8 +718,7 @@ static uint16_t ltlGetAttrDataLengthUsingCB( uint16_t trunkID, uint8_t nodeNO,  
     uint16_t dataLen = 0;
     ltlReadWriteCB_t pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO );
 
-    if ( pfnReadWriteCB != NULL ){
-        // Only get the attribute length
+    if ( pfnReadWriteCB ){ // Only get the attribute length
         (*pfnReadWriteCB)( trunkID, nodeNO, attrId, LTL_OPER_LEN, NULL, &dataLen );
     }
 
@@ -746,11 +741,11 @@ static LStatus_t ltlReadAttrDataUsingCB( uint16_t trunkID,uint8_t nodeNO,  uint1
 {
     ltlReadWriteCB_t pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO );
 
-    if ( pDataLen != NULL ){
+    if ( pDataLen ){
         *pDataLen = 0; // Always initialize it to 0
     }
 
-    if ( pfnReadWriteCB != NULL ){
+    if ( pfnReadWriteCB ){
         // Read the attribute value and its length
         return ( (*pfnReadWriteCB)( trunkID, nodeNO, attrId, LTL_OPER_READ, pAttrData, pDataLen ) );
     }
@@ -798,7 +793,7 @@ static LStatus_t ltlWriteAttrDataUsingCB( uint16_t trunkID, uint8_t nodeNO, ltlA
 
     if ( ltl_AccessCtrlWrite( pAttr->accessControl ) ){
         pfnReadWriteCB = ltlGetReadWriteCB( trunkID, nodeNO);
-        if ( pfnReadWriteCB != NULL ){
+        if ( pfnReadWriteCB ){
             // Write the attribute value
             status = (*pfnReadWriteCB)( trunkID, nodeNO, pAttr->attrId, LTL_OPER_WRITE, pAttrData, NULL );
         }
@@ -825,21 +820,20 @@ LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, ui
     dataLen = readCmd->numAttr * 2; // Attribute ID
 
     buf = mo_malloc( dataLen );
-    if ( buf != NULL ){
-        // Load the buffer - serially
-        pBuf = buf;
-        for (i = 0; i < readCmd->numAttr; i++) {
-            *pBuf++ = LO_UINT16( readCmd->attrID[i] );
-            *pBuf++ = HI_UINT16( readCmd->attrID[i] );
-        }
+    if (!buf){
+        return LTL_MEMERROR;
+    }
+    
+    // Load the buffer - serially
+    pBuf = buf;
+    for (i = 0; i < readCmd->numAttr; i++) {
+        *pBuf++ = LO_UINT16( readCmd->attrID[i] );
+        *pBuf++ = HI_UINT16( readCmd->attrID[i] );
+    }
 
-        status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                                FALSE, TRUE, LTL_CMD_READ_ATTRIBUTES, buf,  dataLen);
-        mo_free( buf );
-    }
-    else{
-        status = LTL_MEMERROR;
-    }
+    status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
+                            LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_CLIENT_SERVER_DIR, TRUE, LTL_CMD_READ_ATTRIBUTES, buf,  dataLen);
+    mo_free( buf );
 
     return ( status );
 }
@@ -876,7 +870,7 @@ LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, ui
     }
 
     buf = mo_malloc( len );
-    if ( buf == NULL ){
+    if ( !buf ){
         return LTL_MEMERROR;
     }
     
@@ -906,8 +900,7 @@ LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, ui
     } // for loop
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, TRUE, LTL_CMD_READ_ATTRIBUTES_RSP, buf, len);
-              
+                            LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_SERVER_CLIENT_DIR, TRUE, LTL_CMD_READ_ATTRIBUTES_RSP, buf, len);
     mo_free( buf );
 
     return ( status );
@@ -932,26 +925,25 @@ LStatus_t ltl_SendWriteRequest(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeN
     }
 
     buf = mo_malloc( dataLen );
-    if ( buf != NULL ){
-        // Load the buffer - serially
-        pBuf = buf;
-        for ( i = 0; i < writeCmd->numAttr; i++ ){
-            statusRec = &(writeCmd->attrList[i]);
-
-            *pBuf++ = LO_UINT16( statusRec->attrID );
-            *pBuf++ = HI_UINT16( statusRec->attrID );
-            *pBuf++ = statusRec->dataType;
-
-            pBuf = ltlSerializeData( statusRec->dataType, statusRec->attrData, pBuf );
-        }
-        
-        status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                                FALSE, TRUE, cmd, buf, dataLen);
-        mo_free( buf );
+    if ( !buf ){
+        return LTL_MEMERROR;
     }
-    else{
-        status = LTL_MEMERROR;
+    
+    // Load the buffer - serially
+    pBuf = buf;
+    for ( i = 0; i < writeCmd->numAttr; i++ ){
+        statusRec = &(writeCmd->attrList[i]);
+
+        *pBuf++ = LO_UINT16( statusRec->attrID );
+        *pBuf++ = HI_UINT16( statusRec->attrID );
+        *pBuf++ = statusRec->dataType;
+
+        pBuf = ltlSerializeData( statusRec->dataType, statusRec->attrData, pBuf );
     }
+    
+    status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
+                            LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_CLIENT_SERVER_DIR, TRUE, cmd, buf, dataLen);
+    mo_free( buf );
 
     return ( status);
 }
@@ -969,7 +961,7 @@ LStatus_t ltl_SendWriteRsp(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, ui
     len = writeRspCmd->numAttr * (1 + 2); //status + attribute id
     
     buf = mo_malloc( len );
-    if ( buf == NULL ){
+    if ( !buf ){
         return LTL_MEMERROR;
     }
     
@@ -986,14 +978,14 @@ LStatus_t ltl_SendWriteRsp(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, ui
     }
     
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, TRUE, LTL_CMD_WRITE_ATTRIBUTES_RSP, buf, len);              
+                            LTL_FRAMECTL_TYPE_PROFILE,LTL_FRAMECTL_SERVER_CLIENT_DIR, TRUE, LTL_CMD_WRITE_ATTRIBUTES_RSP, buf, len);              
     mo_free( buf );
 
     return status;
 }
                                  
-LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
-                                 uint8_t seqNum, uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd)
+LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum,
+                                    uint8_t disableDefaultRsp, ltlReportCmd_t *reportCmd)
 {
     uint8_t i;
     uint16_t dataLen;
@@ -1014,7 +1006,7 @@ LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
     }
 
     buf = mo_malloc( dataLen );
-    if ( buf == NULL ){
+    if ( !buf ){
         return LTL_MEMERROR;
     }
     
@@ -1031,7 +1023,7 @@ LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, disableDefaultRsp, LTL_CMD_REPORT_ATTRIBUTES, buf, dataLen);
+                            LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_CLIENT_SERVER_DIR, disableDefaultRsp, LTL_CMD_REPORT_ATTRIBUTES, buf, dataLen);
     mo_free( buf );
 
     return ( status );
@@ -1056,10 +1048,11 @@ LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t no
         if ( ltlIsAnalogDataType( reportRec->dataType ) ) {
             dataLen += ltlGetBaseDataTypeLength( reportRec->dataType );
         }
+
     }
 
     buf = mo_malloc( dataLen );
-    if ( buf != NULL ){
+    if ( !buf ){
         return LTL_MEMERROR;
     }
     
@@ -1082,7 +1075,7 @@ LStatus_t ltl_SendConfigReportReq( uint16_t dstAddr, uint16_t trunkID,uint8_t no
     } // for loop
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, TRUE, LTL_CMD_CONFIGURE_REPORTING, buf, dataLen);
+                            LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_CLIENT_SERVER_DIR, TRUE, LTL_CMD_CONFIGURE_REPORTING, buf, dataLen);
     mo_free( buf );
 
     return ( status );
@@ -1101,12 +1094,11 @@ LStatus_t ltl_SendConfigReportRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t no
     dataLen = cfgReportRspCmd->numAttr * ( 1 + 2 );
 
     buf = mo_malloc( dataLen );
-    if ( buf == NULL ){
+    if ( !buf ){
         return LTL_MEMERROR;
     }
     // Load the buffer - serially
     pBuf = buf;
-
     for ( i = 0; i < cfgReportRspCmd->numAttr; i++ ) {
         *pBuf++ = cfgReportRspCmd->attrList[i].status;
         *pBuf++ = LO_UINT16( cfgReportRspCmd->attrList[i].attrID );
@@ -1120,7 +1112,7 @@ LStatus_t ltl_SendConfigReportRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t no
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, TRUE, LTL_CMD_CONFIGURE_REPORTING_RSP, buf, dataLen);
+                             LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_SERVER_CLIENT_DIR, TRUE, LTL_CMD_CONFIGURE_REPORTING_RSP, buf, dataLen);
     mo_free( buf );
 
   return ( status );
@@ -1129,28 +1121,28 @@ LStatus_t ltl_SendConfigReportRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t no
 LStatus_t ltl_SendReadReportCfgReq( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,
                                  uint8_t seqNum , ltlReadReportCfgCmd_t *readReportCfgCmd)
 {
-      uint16_t dataLen;
-      uint8_t *buf;
-      uint8_t *pBuf;
-      uint8_t i;
-      LStatus_t status;
+    uint16_t dataLen;
+    uint8_t *buf;
+    uint8_t *pBuf;
+    uint8_t i;
+    LStatus_t status;
 
     dataLen = readReportCfgCmd->numAttr * 2; // Atrribute ID
 
     buf = mo_malloc( dataLen );
-    if ( buf == NULL ) {
+    if ( !buf ) {
         return LTL_MEMERROR;
     }
+    
     // Load the buffer - serially
     pBuf = buf;
-
     for ( i = 0; i < readReportCfgCmd->numAttr; i++ ){
         *pBuf++ = LO_UINT16( readReportCfgCmd->attrID[i] );
         *pBuf++ = HI_UINT16( readReportCfgCmd->attrID[i] );
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, TRUE, LTL_CMD_READ_CONFIGURE_REPORTING, buf, dataLen);
+                            LTL_FRAMECTL_TYPE_PROFILE,LTL_FRAMECTL_SERVER_CLIENT_DIR, TRUE, LTL_CMD_READ_CONFIGURE_REPORTING, buf, dataLen);
     mo_free( buf );
 
   return ( status );
@@ -1169,9 +1161,7 @@ LStatus_t ltl_SendReadReportCfgRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t n
     // Find out the data length
     for ( i = 0; i < readReportCfgRspCmd->numAttr; i++ ) {
         reportRspRec = &(readReportCfgRspCmd->attrList[i]);
-
         dataLen += 1 + 2 ; // Status and Atrribute ID
-
         if ( reportRspRec->status == LTL_STATUS_SUCCESS ) {
             dataLen += 1 + 2; // Data Type + Min
             // Find out the size of the Reportable Change field (for Analog data types)
@@ -1182,12 +1172,12 @@ LStatus_t ltl_SendReadReportCfgRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t n
     }
 
     buf = mo_malloc( dataLen );
-    if ( buf == NULL ){
+    if ( !buf ){
         return LTL_MEMERROR;
     }
+    
     // Load the buffer - serially
-        pBuf = buf;
-
+    pBuf = buf;
     for ( i = 0; i < readReportCfgRspCmd->numAttr; i++ ){
         reportRspRec = &(readReportCfgRspCmd->attrList[i]);
 
@@ -1204,16 +1194,16 @@ LStatus_t ltl_SendReadReportCfgRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t n
                 pBuf = ltlSerializeData( reportRspRec->dataType,
                 reportRspRec->reportableChange, pBuf );
             }
-
         }
     }
 
     status = ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, 
-                            FALSE, TRUE, LTL_CMD_READ_CONFIGURE_REPORTING_RSP, buf, dataLen);
+                            LTL_FRAMECTL_TYPE_PROFILE, LTL_FRAMECTL_SERVER_CLIENT_DIR, TRUE, LTL_CMD_READ_CONFIGURE_REPORTING_RSP, buf, dataLen);
     mo_free( buf );
 
     return ( status );
 }
+                                 
 //ok
 LStatus_t ltl_SendDefaultRsp( uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO,
                                 uint8_t seqNum, ltlDefaultRspCmd_t *defaultRspCmd)
@@ -1224,7 +1214,7 @@ LStatus_t ltl_SendDefaultRsp( uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO
   buf[0] = defaultRspCmd->commandID;
   buf[1] = defaultRspCmd->statusCode;
 
-  return (ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, FALSE, TRUE,
+  return (ltl_SendCommand(dstAddr, trunkID, nodeNO, seqNum, LTL_FRAMECTL_TYPE_PROFILE,LTL_FRAMECTL_SERVER_CLIENT_DIR, TRUE,
                           LTL_CMD_DEFAULT_RSP, buf, 2));
 }
 
@@ -1246,7 +1236,7 @@ static void *ltlParseInReadCmd( uint8_t *pdata, uint16_t datalen )
     uint8_t i;    
     
     readCmd = (ltlReadCmd_t *)mo_malloc( sizeof ( ltlReadCmd_t ) + datalen );
-    if ( readCmd == NULL ){
+    if ( !readCmd ){
         return (void *)NULL;
    }
     
@@ -1309,7 +1299,7 @@ static void *ltlParseInReadRspCmd( uint8_t *pdata, uint16_t datalen )
     hdrLen = sizeof( ltlReadRspCmd_t ) + ( numAttr * sizeof( ltlReadRspStatus_t ) );
   
     readRspCmd = (ltlReadRspCmd_t *)mo_malloc( hdrLen + dataLength );
-    if ( readRspCmd == NULL ){
+    if ( !readRspCmd ){
         return (void *) NULL;
     }
 
@@ -1398,7 +1388,7 @@ static void *ltlParseInWriteCmd(uint8_t *pdata ,uint16_t datalen)
     hdrLen = sizeof( ltlWriteCmd_t ) + ( numAttr * sizeof( ltlWriteRec_t ) );
     
     writeCmd = (ltlWriteCmd_t *)mo_malloc( hdrLen + tempLen );
-    if ( writeCmd == NULL ){
+    if ( !writeCmd ){
         return (void *)NULL;
     }
     
@@ -1447,7 +1437,7 @@ static void *ltlParseInWriteRspCmd( uint8_t *pdata, uint16_t datalen )
     uint8_t i = 0;
 
     writeRspCmd = (ltlWriteRspCmd_t *)mo_malloc( sizeof ( ltlWriteRspCmd_t ) + datalen );
-    if ( writeRspCmd == NULL ){
+    if ( !writeRspCmd ){
         return (void *)NULL;
     }
     
@@ -1519,7 +1509,7 @@ static void *ltlParseInConfigReportCmd(uint8_t *pdata ,uint16_t datalen)
     hdrLen = sizeof( ltlCfgReportCmd_t ) + ( numAttr * sizeof( ltlCfgReportRec_t ) );
 
     cfgReportCmd = (ltlCfgReportCmd_t *)mo_malloc( hdrLen + dataLength );
-    if ( cfgReportCmd == NULL ){
+    if ( !cfgReportCmd ){
         return (void *)NULL;
     }
     
@@ -1578,7 +1568,7 @@ static void *ltlParseInConfigReportRspCmd(uint8_t *pdata ,uint16_t datalen)
     numAttr = datalen / ( 1 + 2 ); // Status  + Attribute ID
 
     cfgReportRspCmd = (ltlCfgReportRspCmd_t *)mo_malloc( sizeof( ltlCfgReportRspCmd_t ) + ( numAttr * sizeof( ltlCfgReportStatus_t ) ) );
-    if ( cfgReportRspCmd == NULL ) {
+    if ( !cfgReportRspCmd ) {
         return (void *)NULL;
     }
     
@@ -1612,8 +1602,8 @@ static void *ltlParseInReadReportCfgCmd(uint8_t *pdata ,uint16_t datalen)
     numAttr = datalen / 2; //  Attribute ID
   
     readReportCfgCmd = (ltlReadReportCfgCmd_t *)mo_malloc( sizeof( ltlReadReportCfgCmd_t ) + ( numAttr * sizeof( uint16_t ) ) );
-    if ( readReportCfgCmd != NULL ) {
-
+    if ( !readReportCfgCmd ) {
+        return (void *)NULL;
     }
     readReportCfgCmd->numAttr = numAttr;
     for ( i = 0; i < readReportCfgCmd->numAttr; i++) {
@@ -1677,7 +1667,7 @@ static void *ltlParseInReadReportCfgRspCmd(uint8_t *pdata ,uint16_t datalen)
     hdrLen = sizeof( ltlReadReportCfgRspCmd_t ) + ( numAttr * sizeof( ltlReportCfgRspRec_t ) );
 
     readReportCfgRspCmd = (ltlReadReportCfgRspCmd_t *)mo_malloc( hdrLen + dataLength );
-    if ( readReportCfgRspCmd == NULL ){
+    if ( !readReportCfgRspCmd ){
         return (void *)NULL;
     }
     
@@ -1763,7 +1753,7 @@ static void *ltlParseInReportCmd(uint8_t *pdata ,uint16_t datalen)
     hdrLen = sizeof( ltlReportCmd_t ) + ( numAttr * sizeof( ltlReport_t ) );
 
     reportCmd = (ltlReportCmd_t *)mo_malloc( hdrLen + dataLen );
-    if (reportCmd != NULL ){
+    if (!reportCmd ){
         return (void *)NULL;
     }
 
@@ -1843,7 +1833,7 @@ static void *ltlParseInDefaultRspCmd(uint8_t *pdata ,uint16_t datalen)
     len = sizeof( ltlReadRspCmd_t ) + (readCmd->numAttr * sizeof( ltlReadRspStatus_t ));
 
     readRspCmd = ( ltlReadRspCmd_t *)mo_malloc( len );
-    if ( readRspCmd == NULL ){
+    if ( !readRspCmd ){
         return FALSE; // EMBEDDED RETURN
     }
 
@@ -1853,10 +1843,11 @@ static void *ltlParseInDefaultRspCmd(uint8_t *pdata ,uint16_t datalen)
         statusRec = &(readRspCmd->attrList[i]);
 
         statusRec->attrID = readCmd->attrID[i];
+
         // find this device attribute record
         if ( ltlFindAttrRec( ApduMsg->hdr.trunkID, ApduMsg->hdr.nodeNo, readCmd->attrID[i], &attrRec ) ){ 
             if ( ltl_AccessCtrlRead( attrRec.accessControl ) ) {
-               statusRec->status = LTL_STATUS_SUCCESS; // set success
+               statusRec->status = LTL_STATUS_SUCCESS;
                statusRec->dataType = attrRec.dataType; // get the attribute data type
                statusRec->data = attrRec.dataPtr; // get the attribute pointer
             }
@@ -1898,7 +1889,7 @@ static uint8_t ltlProcessInWriteCmd(ltlApduMsg_t *ApduMsg)
     if ( ApduMsg->hdr.commandID == LTL_CMD_WRITE_ATTRIBUTES ) {
         // We need to send a response back - allocate space for it
         writeRspCmd = (ltlWriteRspCmd_t *)mo_malloc( sizeof( ltlWriteRspCmd_t ) + sizeof( ltlWriteRspStatus_t ) * writeCmd->numAttr );
-        if ( writeRspCmd == NULL ){
+        if ( !writeRspCmd ){
             return FALSE; // EMBEDDED RETURN
         }
 
@@ -2024,7 +2015,7 @@ static uint8_t ltlProcessInWriteUndividedCmd(ltlApduMsg_t *ApduMsg)
 
     // Allocate space for Write Response Command
     writeRspCmd = (ltlWriteRspCmd_t *)mo_malloc( sizeof( ltlWriteRspCmd_t ) + sizeof( ltlWriteRspStatus_t ) * writeCmd->numAttr );
-    if ( writeRspCmd == NULL ){
+    if ( !writeRspCmd ){
         return FALSE; // EMBEDDED RETURN
     }
 
@@ -2078,7 +2069,7 @@ static uint8_t ltlProcessInWriteUndividedCmd(ltlApduMsg_t *ApduMsg)
 
         // Allocate space to keep a copy of the current data
         curWriteRec = (ltlWriteRec_t *) mo_malloc( hdrLen + curLen );
-        if ( curWriteRec == NULL ){
+        if ( !curWriteRec ){
             mo_free( writeRspCmd );
             return FALSE; // EMBEDDED RETURN
         }
@@ -2188,7 +2179,6 @@ void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt)
 
             if(LTL_PROFILE_CMD_HAS_RSP(ApduMsg.hdr.commandID))
                 return; // we are done in ltlProcessCmd()
-            
         }
         else {
             status = LTL_STATUS_UNSUP_GENERAL_COMMAND;
@@ -2214,7 +2204,10 @@ void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt)
 
     }
 
-    if(ApduMsg.pkt->isbroadcast == FALSE && ApduMsg.hdr.fc.disableDefaultRsp == LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF ){
+    if(!ApduMsg.pkt->isbroadcast && 
+        (!ApduMsg.hdr.fc.disableDefaultRsp) &&
+        ltl_IsFromClient(ApduMsg.hdr.fc.dir) &&
+        ApduMsg.hdr.transSeqNum){
         defaultRspCmd.commandID = ApduMsg.hdr.commandID;
         defaultRspCmd.statusCode = status;
         // send default response
@@ -2241,4 +2234,6 @@ void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen )
     *pAppStr++ = rawlen; // for length    
     memcpy(pAppStr, pRawStr, rawlen);
 }
+
+
 
