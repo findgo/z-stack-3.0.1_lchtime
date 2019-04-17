@@ -13,6 +13,7 @@ extern "C"
 #define TEMP_NODE  1
 #define HUMI_NODE  2
 
+#define APP_TYR_IN_NET_CNT    10
 
 #define LTLAPP_DEVICE_REJOIN_EVT    0x0001
 #define LTLAPP_DEVICE_RECOVER_EVT   0x0002

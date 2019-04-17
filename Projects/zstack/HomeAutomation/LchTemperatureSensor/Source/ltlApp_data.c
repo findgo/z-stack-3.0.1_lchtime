@@ -53,23 +53,27 @@ void TemperatureSensorReport(void)
   humidity = (uint16_t)(info->HUMI*100);
   
   reportCmd =(ltlReportCmd_t *)mo_malloc(sizeof(ltlReportCmd_t) + sizeof(ltlReport_t) * 1 );
-  if(reportCmd){
-      reportCmd->numAttr = 1;
-      reportList = &(reportCmd->attrList[0]);
-      reportList->attrID = TemperatureAttriList[0].attrId;
-      reportList->dataType = TemperatureAttriList[0].dataType;
-      reportList->attrData = TemperatureAttriList[0].dataPtr;
-            
-      ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_MS_TEMPERATURE_MEASUREMENT, TEMP_NODE, 0, TRUE, reportCmd);
+  if(!reportCmd){
+        log_noticeln("no report it");
+        return;
+  }
+  
+  reportCmd->numAttr = 1;
+  reportList = &(reportCmd->attrList[0]);
+  reportList->attrID = TemperatureAttriList[0].attrId;
+  reportList->dataType = TemperatureAttriList[0].dataType;
+  reportList->attrData = TemperatureAttriList[0].dataPtr;
+        
+  ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_MS_TEMPERATURE_MEASUREMENT, TEMP_NODE, 0, TRUE, reportCmd);
 
-      reportCmd->numAttr = 1;
-      reportList = &(reportCmd->attrList[0]);
-      reportList->attrID = HumidityAttriList[0].attrId;
-      reportList->dataType = HumidityAttriList[0].dataType;
-      reportList->attrData = HumidityAttriList[0].dataPtr;      
+  reportCmd->numAttr = 1;
+  reportList = &(reportCmd->attrList[0]);
+  reportList->attrID = HumidityAttriList[0].attrId;
+  reportList->dataType = HumidityAttriList[0].dataType;
+  reportList->attrData = HumidityAttriList[0].dataPtr;      
 
-      ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_MS_RELATIVE_HUMIDITY, HUMI_NODE, 0, TRUE, reportCmd);
+  ltl_SendReportCmd(0x0000, LTL_TRUNK_ID_MS_RELATIVE_HUMIDITY, HUMI_NODE, 0, TRUE, reportCmd);
 
-      mo_free(reportCmd);
-  } 
+  mo_free(reportCmd);
+  log_noticeln("report it");
 }

@@ -52,7 +52,6 @@ byte ltlApp_TaskID;
 /*********************************************************************
  * LOCAL VARIABLES
  */
-#define APP_TYR_IN_NET_CNT    10
 
 devStates_t ltlApp_NwkState = DEV_INIT;
 
@@ -156,6 +155,8 @@ void ltlApp_Init( byte task_id )
 
     SHT2x_Init(); // 初始化iic
     SHT2x_SetFeature(SHT2x_Resolution_12_14, FALSE); // 初始化精度 和 加热
+    osal_set_event( ltlApp_TaskID, LTLAPP_DEVICE_REJOIN_EVT);  // start device join nwk
+    HalLedBlink(HAL_LED_1, 0, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
 
 #if defined(GLOBAL_DEBUG)
     osal_set_event(ltlApp_TaskID, LTLAPP_TEST_EVT);

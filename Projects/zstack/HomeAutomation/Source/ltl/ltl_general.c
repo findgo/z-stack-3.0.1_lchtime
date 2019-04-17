@@ -43,12 +43,12 @@ LStatus_t ltlGeneral_RegisterCmdCallBacks(ltlGeneral_AppCallbacks_t *callbacks)
  */
 static LStatus_t ltlGeneral_SpecificTrunckhandle( ltlApduMsg_t *ApduMsg )
 {
-    LStatus_t status = LTL_STATUS_SUCCESS;
+    LStatus_t status = LTL_STATUS_INVALID_FIELD;
 
     if( ltl_IsTrunkCmd(ApduMsg->hdr.fc.type) ){
         if(ltlGeneralCBs == NULL)
             return LTL_STATUS_FAILURE;
-// gerneral specific trunk process add here         
+        // gerneral specific trunk process add here         
         switch (ApduMsg->hdr.trunkID){
         case LTL_TRUNK_ID_GENERAL_BASIC:
             status = ltlGeneral_ProcessSpecificInbasic(ApduMsg, ltlGeneralCBs);
@@ -108,7 +108,7 @@ static LStatus_t ltlGeneral_ProcessSpecificInbasic( ltlApduMsg_t *ApduMsg , ltlG
         //break;
     }
 
-    return LTL_STATUS_SUCCESS;
+    return LTL_STATUS_CMD_HAS_RSP;
 }
 /*********************************************************************
  * @brief   通用集下 onoff命令解析回调

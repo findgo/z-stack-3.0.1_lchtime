@@ -6,17 +6,20 @@
 #include "memalloc.h"
 #include "ltl_trunk.h"
 #include "prefix.h"
-
 // define in frame control field
 //bit mask
-#define LTL_FRAMECTL_TYPE_MASK             0x03
-#define LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK  0x04
+#define LTL_FRAMECTL_TYPE_MASK                  0x03
+#define LTL_FRAMECTL_DISALBE_DEFAULT_RSP_MASK   0x04
+#define LTL_FRAMECTL_DIRECTION_MASK             0x08
 //subfield type
 #define LTL_FRAMECTL_TYPE_PROFILE          0x00
 #define LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC   0x01
 //subfield disable default response
-#define LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF 0
-#define LTL_FRAMECTL_DIS_DEFAULT_RSP_ON 1
+#define LTL_FRAMECTL_DIS_DEFAULT_RSP_OFF    0
+#define LTL_FRAMECTL_DIS_DEFAULT_RSP_ON     1
+//subfield direction
+#define LTL_FRAMECTL_SERVER_CLIENT_DIR  0
+#define LTL_FRAMECTL_CLIENT_SERVER_DIR  1
 
 // General command IDs on profile 
 #define LTL_CMD_READ_ATTRIBUTES                 0x00
@@ -95,8 +98,6 @@
 #define LTL_FAILURE  0x01  
 #define LTL_MEMERROR 0x02
 
-
-
 // 对于应用层的数据类型的一些 字节串 字符串 数组进行定义预留长度
 #define OCTET_CHAR_HEADROOM_LEN         (1) // length : 1
 
@@ -106,6 +107,9 @@
 #define ltl_IsProfileCmd( a )           ( (a) == LTL_FRAMECTL_TYPE_PROFILE )
 #define ltl_IsTrunkCmd( a )             ( (a) == LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC )
 
+#define ltl_IsFromClient( a )            ( (a) == LTL_FRAMECTL_CLIENT_SERVER_DIR )
+#define ltl_IsFromServer( a )            ( (a) == LTL_FRAMECTL_SERVER_CLIENT_DIR ) 
+
 typedef uint8_t LStatus_t;
 
 // LTL header - frame control field
@@ -113,6 +117,7 @@ typedef struct
 {
     uint8_t type;
     uint8_t disableDefaultRsp;
+    uint8_t dir;
     uint8_t reserved;
 } ltlFrameHdrctl_t;
 
@@ -354,13 +359,12 @@ uint8_t ltlIsValidDataType (uint8_t dataType );
 uint8_t ltlIsBaseDataType( uint8_t dataType);
 uint8_t ltlIsComplexDataType(uint8_t dataType);
 uint8_t ltlIsAnalogDataType( uint8_t dataType );
-uint8_t ltlGetBaseDataTypeLength( uint8_t dataType );
 uint8_t ltlIsAnalogDataType( uint8_t dataType );
-
+uint8_t ltlGetBaseDataTypeLength( uint8_t dataType );
 uint16_t ltlGetAttrDataLength( uint8_t dataType, uint8_t *pData );
 
 LStatus_t ltl_SendCommand(uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO,uint8_t seqNum, 
-                                uint8_t specific , uint8_t disableDefaultRsp,
+                                uint8_t specific,uint8_t dir, uint8_t disableDefaultRsp,
                                 uint8_t cmd, uint8_t *cmdFormat,uint16_t cmdFormatLen);
 LStatus_t ltl_SendReadReq(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadCmd_t *readCmd );
 LStatus_t ltl_SendReadRsp(uint16_t dstAddr, uint16_t trunkID, uint8_t nodeNO, uint8_t seqNum, ltlReadRspCmd_t *readRspCmd );
@@ -384,7 +388,8 @@ LStatus_t ltl_SendReportCmd( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, 
 
 LStatus_t ltl_SendDefaultRsp( uint16_t dstAddr, uint16_t trunkID,uint8_t nodeNO, uint8_t seqNum, ltlDefaultRspCmd_t *defaultRspCmd);
 
-#define ltl_SendSpecificCmd(dstAddr,trunkID,nodeNO,seqNum,disableDefaultRsp,cmd,cmdFormat,cmdFormatLen) ltl_SendCommand(dstAddr, trunkID,nodeNO,seqNum,TRUE, disableDefaultRsp,cmd,cmdFormat,cmdFormatLen)
+#define ltl_SendSpecificCmd(dstAddr,trunkID,nodeNO,seqNum,dir,disableDefaultRsp,cmd,cmdFormat,cmdFormatLen) \
+                    ltl_SendCommand(dstAddr, trunkID,nodeNO,seqNum,LTL_FRAMECTL_TYPE_TRUNK_SPECIFIC,dir, disableDefaultRsp,cmd,cmdFormat,cmdFormatLen)
 
 
 void ltl_ProcessInApdu(MoIncomingMsgPkt_t *pkt);
@@ -397,3 +402,4 @@ void ltl_StrToAppString(char *pRawStr, char *pAppStr, uint8_t Applen );
 #define ltl_AppArraytoArray(pAppArray)  ((void *)(((uint8_t *)pAppArray) + 1))
 
 #endif
+
