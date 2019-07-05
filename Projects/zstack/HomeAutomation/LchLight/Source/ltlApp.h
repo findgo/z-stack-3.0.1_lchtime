@@ -12,8 +12,8 @@ extern "C"
 
 
 #define LIGHT_NODE_1  1
-#define LIGHT_NODE_2  2
-#define LIGHT_NODE_3  3
+//#define LIGHT_NODE_2  2
+//#define LIGHT_NODE_3  3
 
 
 #define LTLAPP_DEVICE_REJOIN_EVT    0x0001
